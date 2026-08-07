@@ -1,6 +1,6 @@
 # Zero — Debt Managing App
 
-Zero is a focused debt payoff coach built on Dave Ramsey's Baby Steps: save a
+Zero is a focused debt payoff coach built on the snowball dept repayment plan: save a
 $1,000 starter emergency fund, then attack your debts smallest-to-largest
 (the debt snowball) with everything you've got.
 
