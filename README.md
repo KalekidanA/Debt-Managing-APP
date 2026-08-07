@@ -6,7 +6,7 @@ $1,000 starter emergency fund, then attack your debts smallest-to-largest
 
 ## Features
 
-- **Home** — current Baby Step, a payoff-progress ring, debt-free date,
+- **Home** — current Goal, a payoff-progress ring, debt-free date,
   interest saved vs. paying minimums only, and your current focus debt.
 - **Debts** — add/edit credit cards, auto loans, student loans, etc.; toggle
   between the debt snowball (default) and debt avalanche strategies; set an
