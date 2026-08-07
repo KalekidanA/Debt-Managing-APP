@@ -91,3 +91,12 @@ export function criticalReminders(
   }
   return reminders;
 }
+
+/** Zero has no server, so reminders are computed and shown client-side
+ * whenever the app is opened or regains focus — this filters out any that
+ * have already been shown (by id) so the same alert doesn't repeat every
+ * time the app is reopened on the same day. */
+export function filterUnshownReminders(reminders: ReminderPlan[], shownIds: string[]): ReminderPlan[] {
+  const shown = new Set(shownIds);
+  return reminders.filter((r) => !shown.has(r.id));
+}

@@ -22,6 +22,13 @@ export interface AppState {
   debtBaseline: number;
   /** Permanent, append-only history of milestone/payoff celebrations. */
   celebrations: CelebrationEvent[];
+  /** Whether the user has opted into local notifications (Notification
+   * permission may still need to be granted separately by the browser). */
+  notificationsEnabled: boolean;
+  /** IDs of ReminderPlans already shown, so the same daily/critical alert
+   * doesn't repeat every time the app is reopened. Capped so it can't grow
+   * unbounded over months of use. */
+  shownReminderIds: string[];
 }
 
 const DEFAULT_STATE: AppState = {
@@ -33,7 +40,11 @@ const DEFAULT_STATE: AppState = {
   hasCompletedOnboarding: false,
   debtBaseline: 0,
   celebrations: [],
+  notificationsEnabled: false,
+  shownReminderIds: [],
 };
+
+const MAX_SHOWN_REMINDER_IDS = 300;
 
 function totalNonMortgageDebt(debts: Debt[]): number {
   return debts.filter((d) => d.type !== "mortgage").reduce((sum, d) => sum + d.balance, 0);
@@ -95,6 +106,8 @@ interface AppStateContextValue {
   addChatMessage: (message: AIChatMessage) => void;
   completeOnboarding: () => void;
   markCelebrationSeen: (id: string) => void;
+  setNotificationsEnabled: (enabled: boolean) => void;
+  markRemindersShown: (ids: string[]) => void;
   resetAll: () => void;
 }
 
@@ -160,6 +173,19 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const setNotificationsEnabled = useCallback((enabled: boolean) => {
+    setState((prev) => ({ ...prev, notificationsEnabled: enabled }));
+  }, []);
+
+  const markRemindersShown = useCallback((ids: string[]) => {
+    if (ids.length === 0) return;
+    setState((prev) => {
+      const merged = [...prev.shownReminderIds, ...ids.filter((id) => !prev.shownReminderIds.includes(id))];
+      const trimmed = merged.length > MAX_SHOWN_REMINDER_IDS ? merged.slice(merged.length - MAX_SHOWN_REMINDER_IDS) : merged;
+      return { ...prev, shownReminderIds: trimmed };
+    });
+  }, []);
+
   const resetAll = useCallback(() => {
     setState(DEFAULT_STATE);
   }, []);
@@ -177,6 +203,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       addChatMessage,
       completeOnboarding,
       markCelebrationSeen,
+      setNotificationsEnabled,
+      markRemindersShown,
       resetAll,
     }),
     [
@@ -191,6 +219,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       addChatMessage,
       completeOnboarding,
       markCelebrationSeen,
+      setNotificationsEnabled,
+      markRemindersShown,
       resetAll,
     ]
   );

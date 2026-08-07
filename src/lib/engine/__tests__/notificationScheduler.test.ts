@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Debt } from "../debt";
 import { DEFAULT_FINANCIAL_PROFILE } from "../financialProfile";
-import { criticalReminders, dailyMorningReminder } from "../notificationScheduler";
+import { criticalReminders, dailyMorningReminder, filterUnshownReminders, type ReminderPlan } from "../notificationScheduler";
 
 function makeDebt(overrides: Partial<Debt> & { id: string }): Debt {
   return {
@@ -55,5 +55,30 @@ describe("criticalReminders", () => {
     const farOut = makeDebt({ id: "far-out", name: "Far Out", balance: 500, dueDayOfMonth: 28 });
     const reminders = criticalReminders([farOut], undefined, referenceDate);
     expect(reminders).toHaveLength(0);
+  });
+});
+
+describe("filterUnshownReminders", () => {
+  const reminder = (id: string): ReminderPlan => ({
+    id,
+    fireDate: referenceDate,
+    title: "t",
+    body: "b",
+    isCritical: false,
+  });
+
+  it("drops reminders whose id has already been shown", () => {
+    const result = filterUnshownReminders([reminder("a"), reminder("b")], ["a"]);
+    expect(result.map((r) => r.id)).toEqual(["b"]);
+  });
+
+  it("returns everything when nothing has been shown yet", () => {
+    const result = filterUnshownReminders([reminder("a"), reminder("b")], []);
+    expect(result.map((r) => r.id)).toEqual(["a", "b"]);
+  });
+
+  it("returns nothing when everything has already been shown", () => {
+    const result = filterUnshownReminders([reminder("a")], ["a", "b"]);
+    expect(result).toEqual([]);
   });
 });

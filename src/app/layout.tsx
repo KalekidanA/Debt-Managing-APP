@@ -4,6 +4,7 @@ import "./globals.css";
 import { AppStateProvider } from "@/lib/state/AppStateContext";
 import { TabBar } from "@/components/TabBar";
 import { CelebrationOverlay } from "@/components/celebrations/CelebrationOverlay";
+import { NotificationManager } from "@/components/notifications/NotificationManager";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -48,6 +49,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           {children}
           <TabBar />
           <CelebrationOverlay />
+          <NotificationManager />
         </AppStateProvider>
       </body>
     </html>
