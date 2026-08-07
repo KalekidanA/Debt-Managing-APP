@@ -15,10 +15,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Next.js applies `basePath` automatically to most asset references, but
+// not to the `manifest` metadata field, so it's prefixed by hand here.
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 export const metadata: Metadata = {
   title: "Zero — Pay off your debt",
   description: "A focused debt payoff coach that helps you build an emergency fund and become debt-free.",
-  manifest: "/manifest.webmanifest",
+  manifest: `${basePath}/manifest.webmanifest`,
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
