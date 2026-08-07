@@ -1,0 +1,88 @@
+"use client";
+
+import { useState, type FormEvent } from "react";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Field } from "@/components/ui/Field";
+import { useAppState } from "@/lib/state/AppStateContext";
+
+export function ProfileSetupForm() {
+  const { state, setProfile, completeOnboarding } = useAppState();
+  const [income, setIncome] = useState(state.profile.monthlyIncome ? String(state.profile.monthlyIncome) : "");
+  const [expenses, setExpenses] = useState(state.profile.monthlyExpenses ? String(state.profile.monthlyExpenses) : "");
+  const [fundSaved, setFundSaved] = useState(state.profile.emergencyFundSaved ? String(state.profile.emergencyFundSaved) : "");
+
+  function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    setProfile({
+      monthlyIncome: Number(income) || 0,
+      monthlyExpenses: Number(expenses) || 0,
+      emergencyFundSaved: Number(fundSaved) || 0,
+      emergencyFundTarget: state.profile.emergencyFundTarget || 1000,
+    });
+    completeOnboarding();
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div>
+        <p className="text-sm font-semibold uppercase tracking-wide text-primary">Welcome to Zero</p>
+        <h1 className="mt-1 text-3xl font-semibold tracking-tight text-foreground">Let&apos;s get you to zero debt.</h1>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+          Zero is built on Dave Ramsey&apos;s Baby Steps: save a starter emergency fund first, then attack your debts
+          smallest-to-largest with everything you&apos;ve got. A few numbers to start.
+        </p>
+      </div>
+
+      <Card>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <Field
+            label="Monthly take-home income"
+            fieldPrefix="$"
+            type="number"
+            inputMode="decimal"
+            min={0}
+            step="0.01"
+            placeholder="4,500"
+            value={income}
+            onChange={(e) => setIncome(e.target.value)}
+            required
+          />
+          <Field
+            label="Monthly bills & expenses"
+            hint="Rent/mortgage, utilities, groceries, insurance — everything except debt minimums."
+            fieldPrefix="$"
+            type="number"
+            inputMode="decimal"
+            min={0}
+            step="0.01"
+            placeholder="3,200"
+            value={expenses}
+            onChange={(e) => setExpenses(e.target.value)}
+            required
+          />
+          <Field
+            label="Cash saved right now"
+            hint="Toward your $1,000 Baby Step 1 starter emergency fund."
+            fieldPrefix="$"
+            type="number"
+            inputMode="decimal"
+            min={0}
+            step="0.01"
+            placeholder="0"
+            value={fundSaved}
+            onChange={(e) => setFundSaved(e.target.value)}
+            required
+          />
+          <Button type="submit" className="mt-2 w-full">
+            Continue
+          </Button>
+        </form>
+      </Card>
+
+      <p className="text-center text-xs text-muted-foreground">
+        Everything stays on this device. You&apos;ll add your credit cards and loans next.
+      </p>
+    </div>
+  );
+}

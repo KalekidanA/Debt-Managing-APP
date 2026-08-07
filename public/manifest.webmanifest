@@ -1,0 +1,10 @@
+{
+  "name": "Zero — Pay off your debt",
+  "short_name": "Zero",
+  "description": "A focused debt payoff coach built on Dave Ramsey's Baby Steps.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f8f6",
+  "theme_color": "#0e7c56",
+  "icons": []
+}
