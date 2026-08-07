@@ -43,7 +43,7 @@ export default function DebtsPage() {
           <div>
             <p className="text-sm font-medium text-foreground">Payoff strategy</p>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Zero defaults to the snowball method — Dave Ramsey&apos;s recommendation.
+              Zero defaults to the snowball method for quick, motivating wins.
             </p>
           </div>
           <StrategyToggle />

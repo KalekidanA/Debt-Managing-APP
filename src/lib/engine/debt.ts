@@ -2,8 +2,8 @@ import { addMonths, differenceInCalendarDays, getDaysInMonth, setDate, startOfDa
 import { clamp } from "./utils";
 
 /** The kind of debt a user is carrying. Mortgages are tracked separately
- * from "consumer debt" for Baby Steps purposes (Dave Ramsey excludes the
- * house from Baby Step 2's debt snowball). */
+ * from "consumer debt" — the house is paid off on its own timeline, after
+ * the rest of the debt snowball is cleared. */
 export type DebtType =
   | "creditCard"
   | "autoLoan"
@@ -23,8 +23,8 @@ export const DEBT_TYPE_META: Record<DebtType, { displayName: string; icon: strin
   other: { displayName: "Other Debt", icon: "file-text" },
 };
 
-/** Dave Ramsey's Baby Step 2 (debt snowball) excludes the primary
- * mortgage — it's paid off separately in Baby Step 6. */
+/** The debt snowball excludes the primary mortgage — it's paid off on its
+ * own, separate timeline. */
 export function countsTowardSnowball(type: DebtType): boolean {
   return type !== "mortgage";
 }

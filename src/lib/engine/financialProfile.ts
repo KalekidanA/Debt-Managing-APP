@@ -1,12 +1,12 @@
 import { clamp } from "./utils";
 
 /** The user's overall financial picture: what comes in, what goes out, and
- * how much of Baby Step 1's starter emergency fund has been saved. */
+ * how much of the starter emergency fund goal has been saved. */
 export interface FinancialProfile {
   monthlyIncome: number;
   monthlyExpenses: number;
   emergencyFundSaved: number;
-  /** Dave Ramsey's starter emergency fund target (Baby Step 1). Kept
+  /** The starter emergency fund target. Defaults to $1,000 but is kept
    * configurable in case the household situation calls for more. */
   emergencyFundTarget: number;
 }

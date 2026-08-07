@@ -1,7 +1,7 @@
 export * from "./utils";
 export * from "./debt";
 export * from "./financialProfile";
-export * from "./babyStep";
+export * from "./goals";
 export * from "./payoffStrategy";
 export * from "./debtOrganizer";
 export * from "./payoffCalculator";
@@ -9,3 +9,4 @@ export * from "./notificationScheduler";
 export * from "./aiContext";
 export * from "./aiAdvisor";
 export * from "./adviceEngine";
+export * from "./celebrations";

@@ -20,7 +20,7 @@ function makeDebt(overrides: Partial<Debt> & { id: string }): Debt {
 const referenceDate = new Date(2026, 0, 10);
 
 describe("dailyMorningReminder", () => {
-  it("mentions the emergency fund during Baby Step 1", () => {
+  it("mentions the emergency fund during the starter safety net goal", () => {
     const profile = { ...DEFAULT_FINANCIAL_PROFILE, emergencyFundSaved: 400 };
     const reminder = dailyMorningReminder(profile, [], "snowball", referenceDate);
     expect(reminder).toBeDefined();
@@ -28,7 +28,7 @@ describe("dailyMorningReminder", () => {
     expect(reminder!.body).toContain("600");
   });
 
-  it("mentions the focus debt during Baby Step 2", () => {
+  it("mentions the focus debt during the debt-free goal", () => {
     const profile = { ...DEFAULT_FINANCIAL_PROFILE, emergencyFundSaved: 1000 };
     const debt = makeDebt({ id: "chase", name: "Chase Card", balance: 500, dueDayOfMonth: 13 });
     const reminder = dailyMorningReminder(profile, [debt], "snowball", referenceDate);

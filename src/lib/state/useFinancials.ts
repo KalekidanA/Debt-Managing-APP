@@ -2,7 +2,6 @@
 
 import { useMemo } from "react";
 import { buildSnapshot, type FinancialSnapshot } from "@/lib/engine/aiContext";
-import { currentBabyStep } from "@/lib/engine/babyStep";
 import { orderDebts } from "@/lib/engine/debtOrganizer";
 import { compareStrategies, interestSavedVersusMinimumOnly, type PayoffPlan } from "@/lib/engine/payoffCalculator";
 import { useAppState } from "./AppStateContext";
@@ -53,5 +52,3 @@ export function useFinancials(): Financials {
     };
   }, [state.profile, state.debts, state.strategy, state.extraMonthlyPayment, state.debtBaseline]);
 }
-
-export { currentBabyStep };

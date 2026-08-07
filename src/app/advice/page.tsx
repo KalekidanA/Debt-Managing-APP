@@ -34,7 +34,7 @@ export default function AdvicePage() {
       <PageHeader title="Advice" subtitle="What actually moves the needle, based on your numbers." />
       <div className="flex flex-col gap-4">
         <BudgetBreakdownCard budget={budget} />
-        {snapshot.babyStep === 2 && <StrategyComparisonCard plans={plans} activeStrategy={snapshot.strategy} />}
+        {snapshot.goalStage === "debtFree" && <StrategyComparisonCard plans={plans} activeStrategy={snapshot.strategy} />}
         {tips.length === 0 ? (
           <Card className="py-8 text-center text-sm text-muted-foreground">
             Add a debt and your budget details to get personalized advice.

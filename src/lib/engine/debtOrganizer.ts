@@ -3,8 +3,8 @@ import type { PayoffStrategy } from "./payoffStrategy";
 
 /** Orders debts according to a payoff strategy. Only debts that count
  * toward the snowball (i.e. not the primary mortgage) are considered by
- * default — callers who want the mortgage included (Baby Step 6 planning)
- * can pass `includeMortgage: true`. */
+ * default — callers who want the mortgage included (for planning an early
+ * payoff of the house itself) can pass `includeMortgage: true`. */
 export function orderDebts(debts: Debt[], strategy: PayoffStrategy, includeMortgage = false): Debt[] {
   const eligible = debts.filter((d) => d.balance > 0 && (includeMortgage || countsTowardSnowball(d.type)));
   return [...eligible].sort((a, b) => {

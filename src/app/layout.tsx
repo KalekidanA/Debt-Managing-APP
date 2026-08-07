@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AppStateProvider } from "@/lib/state/AppStateContext";
 import { TabBar } from "@/components/TabBar";
+import { CelebrationOverlay } from "@/components/celebrations/CelebrationOverlay";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Zero — Pay off your debt",
-  description: "A focused debt payoff coach built on Dave Ramsey's Baby Steps.",
+  description: "A focused debt payoff coach that helps you build an emergency fund and become debt-free.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <AppStateProvider>
           {children}
           <TabBar />
+          <CelebrationOverlay />
         </AppStateProvider>
       </body>
     </html>

@@ -55,10 +55,10 @@ export function generateAdvice(snapshot: FinancialSnapshot, budget: BudgetBreakd
     });
   }
 
-  if (snapshot.babyStep === 1) {
+  if (snapshot.goalStage === "starterSafetyNet") {
     tips.push({
-      id: "step1-focus",
-      title: "Stay focused on the $1,000",
+      id: "safety-net-focus",
+      title: `Stay focused on the $${snapshot.profile.emergencyFundTarget}`,
       body: "Pause extra debt payments until your starter emergency fund is full — it's what keeps a flat tire or ER visit from becoming new debt.",
       tone: "suggestion",
     });

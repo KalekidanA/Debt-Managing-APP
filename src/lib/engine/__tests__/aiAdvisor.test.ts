@@ -18,9 +18,9 @@ function makeSnapshot() {
 }
 
 describe("mockAdvisorRespond", () => {
-  it("mentions the baby step and focus debt by default", async () => {
+  it("mentions the current goal and focus debt by default", async () => {
     const response = await mockAdvisorRespond("hi", makeSnapshot(), []);
-    expect(response).toContain("Baby Step 2");
+    expect(response.toLowerCase()).toContain("current goal");
     expect(response).toContain("Visa Card");
   });
 

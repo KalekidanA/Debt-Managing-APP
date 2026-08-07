@@ -29,8 +29,8 @@ export function ProfileSetupForm() {
         <p className="text-sm font-semibold uppercase tracking-wide text-primary">Welcome to Zero</p>
         <h1 className="mt-1 text-3xl font-semibold tracking-tight text-foreground">Let&apos;s get you to zero debt.</h1>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          Zero is built on Dave Ramsey&apos;s Baby Steps: save a starter emergency fund first, then attack your debts
-          smallest-to-largest with everything you&apos;ve got. A few numbers to start.
+          Save a starter emergency fund first, then attack your debts smallest-to-largest with everything
+          you&apos;ve got. A few numbers to start.
         </p>
       </div>
 
@@ -63,7 +63,7 @@ export function ProfileSetupForm() {
           />
           <Field
             label="Cash saved right now"
-            hint="Toward your $1,000 Baby Step 1 starter emergency fund."
+            hint="Toward your $1,000 starter emergency fund goal."
             fieldPrefix="$"
             type="number"
             inputMode="decimal"

@@ -1,4 +1,4 @@
-import { BABY_STEP_TITLES, currentBabyStep, type BabyStep } from "./babyStep";
+import { currentGoalStage, goalStage, type GoalStageId } from "./goals";
 import type { Debt } from "./debt";
 import { currentTarget, orderDebts } from "./debtOrganizer";
 import type { FinancialProfile } from "./financialProfile";
@@ -15,7 +15,7 @@ export interface FinancialSnapshot {
   debts: Debt[];
   strategy: PayoffStrategy;
   extraMonthlyPayment: number;
-  babyStep: BabyStep;
+  goalStage: GoalStageId;
   currentPlan?: PayoffPlan;
   referenceDate: Date;
 }
@@ -27,14 +27,14 @@ export function buildSnapshot(
   extraMonthlyPayment: number,
   referenceDate: Date = new Date()
 ): FinancialSnapshot {
-  const babyStep = currentBabyStep(profile, debts);
+  const stage = currentGoalStage(profile, debts);
   let currentPlan: PayoffPlan | undefined;
   try {
     currentPlan = simulate(debts, strategy, extraMonthlyPayment, referenceDate);
   } catch {
     currentPlan = undefined;
   }
-  return { profile, debts, strategy, extraMonthlyPayment, babyStep, currentPlan, referenceDate };
+  return { profile, debts, strategy, extraMonthlyPayment, goalStage: stage, currentPlan, referenceDate };
 }
 
 export function focusDebt(snapshot: FinancialSnapshot): Debt | undefined {
@@ -47,7 +47,7 @@ export function focusDebt(snapshot: FinancialSnapshot): Debt | undefined {
  * implementation both build their context the same way. */
 export function systemPromptContext(snapshot: FinancialSnapshot): string {
   const lines: string[] = [];
-  lines.push(`Current Baby Step: ${snapshot.babyStep} — ${BABY_STEP_TITLES[snapshot.babyStep]}`);
+  lines.push(`Current goal: ${goalStage(snapshot.goalStage).title}`);
   lines.push(`Monthly income: $${snapshot.profile.monthlyIncome}, monthly expenses: $${snapshot.profile.monthlyExpenses}`);
   lines.push(`Emergency fund: $${snapshot.profile.emergencyFundSaved} of $${snapshot.profile.emergencyFundTarget}`);
   lines.push(`Strategy: ${snapshot.strategy}, extra monthly payment: $${snapshot.extraMonthlyPayment}`);

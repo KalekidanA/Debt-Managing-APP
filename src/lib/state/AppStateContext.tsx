@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { AIChatMessage } from "@/lib/engine/aiAdvisor";
+import { detectNewlyPaidOffDebts, detectNewMilestones, type CelebrationEvent } from "@/lib/engine/celebrations";
 import type { Debt } from "@/lib/engine/debt";
 import { DEFAULT_FINANCIAL_PROFILE, type FinancialProfile } from "@/lib/engine/financialProfile";
 import { DEFAULT_PAYOFF_STRATEGY, type PayoffStrategy } from "@/lib/engine/payoffStrategy";
@@ -19,6 +20,8 @@ export interface AppState {
    * forgotten debt is added later; never shrinks as balances are paid
    * down. */
   debtBaseline: number;
+  /** Permanent, append-only history of milestone/payoff celebrations. */
+  celebrations: CelebrationEvent[];
 }
 
 const DEFAULT_STATE: AppState = {
@@ -29,10 +32,55 @@ const DEFAULT_STATE: AppState = {
   chatMessages: [],
   hasCompletedOnboarding: false,
   debtBaseline: 0,
+  celebrations: [],
 };
 
 function totalNonMortgageDebt(debts: Debt[]): number {
   return debts.filter((d) => d.type !== "mortgage").reduce((sum, d) => sum + d.balance, 0);
+}
+
+/** Applies a debts mutation to `prev` and detects any milestone/payoff
+ * celebrations it crossed, comparing against `prev.debtBaseline` (not the
+ * post-mutation baseline) so that adding a brand-new, larger debt in the
+ * same action can never itself look like negative progress. */
+function applyDebtsChange(prev: AppState, newDebts: Debt[]): AppState {
+  const prevTotal = totalNonMortgageDebt(prev.debts);
+  const newTotal = totalNonMortgageDebt(newDebts);
+  const prevPaidOff = prev.debtBaseline - prevTotal;
+  const newPaidOff = prev.debtBaseline - newTotal;
+
+  const newMilestones = detectNewMilestones(prevPaidOff, newPaidOff);
+  const newlyPaidOffDebts = detectNewlyPaidOffDebts(prev.debts, newDebts);
+
+  const now = new Date();
+  const newCelebrations: CelebrationEvent[] = [
+    ...newMilestones.map(
+      (amount): CelebrationEvent => ({
+        id: crypto.randomUUID(),
+        kind: "debtMilestone",
+        milestoneAmount: amount,
+        createdAt: now,
+        seen: false,
+      })
+    ),
+    ...newlyPaidOffDebts.map(
+      (debt): CelebrationEvent => ({
+        id: crypto.randomUUID(),
+        kind: "debtPaidOff",
+        debtId: debt.id,
+        debtName: debt.name,
+        createdAt: now,
+        seen: false,
+      })
+    ),
+  ];
+
+  return {
+    ...prev,
+    debts: newDebts,
+    debtBaseline: Math.max(prev.debtBaseline, newTotal),
+    celebrations: newCelebrations.length > 0 ? [...prev.celebrations, ...newCelebrations] : prev.celebrations,
+  };
 }
 
 interface AppStateContextValue {
@@ -46,6 +94,7 @@ interface AppStateContextValue {
   setExtraMonthlyPayment: (amount: number) => void;
   addChatMessage: (message: AIChatMessage) => void;
   completeOnboarding: () => void;
+  markCelebrationSeen: (id: string) => void;
   resetAll: () => void;
 }
 
@@ -77,17 +126,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addDebt = useCallback((debt: Debt) => {
-    setState((prev) => {
-      const debts = [...prev.debts, debt];
-      return { ...prev, debts, debtBaseline: Math.max(prev.debtBaseline, totalNonMortgageDebt(debts)) };
-    });
+    setState((prev) => applyDebtsChange(prev, [...prev.debts, debt]));
   }, []);
 
   const updateDebt = useCallback((id: string, patch: Partial<Debt>) => {
-    setState((prev) => {
-      const debts = prev.debts.map((d) => (d.id === id ? { ...d, ...patch } : d));
-      return { ...prev, debts, debtBaseline: Math.max(prev.debtBaseline, totalNonMortgageDebt(debts)) };
-    });
+    setState((prev) => applyDebtsChange(prev, prev.debts.map((d) => (d.id === id ? { ...d, ...patch } : d))));
   }, []);
 
   const removeDebt = useCallback((id: string) => {
@@ -110,6 +153,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, hasCompletedOnboarding: true }));
   }, []);
 
+  const markCelebrationSeen = useCallback((id: string) => {
+    setState((prev) => ({
+      ...prev,
+      celebrations: prev.celebrations.map((c) => (c.id === id ? { ...c, seen: true } : c)),
+    }));
+  }, []);
+
   const resetAll = useCallback(() => {
     setState(DEFAULT_STATE);
   }, []);
@@ -126,6 +176,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setExtraMonthlyPayment,
       addChatMessage,
       completeOnboarding,
+      markCelebrationSeen,
       resetAll,
     }),
     [
@@ -139,6 +190,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setExtraMonthlyPayment,
       addChatMessage,
       completeOnboarding,
+      markCelebrationSeen,
       resetAll,
     ]
   );

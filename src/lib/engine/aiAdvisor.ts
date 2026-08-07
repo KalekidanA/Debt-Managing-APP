@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { BABY_STEP_TITLES } from "./babyStep";
+import { goalStage } from "./goals";
 import { daysUntilNextDueDate, type Debt } from "./debt";
 import { compareStrategies, impactOfExtraPayment, interestSavedVersusMinimumOnly } from "./payoffCalculator";
 import type { FinancialSnapshot } from "./aiContext";
@@ -77,7 +77,7 @@ function strategyComparison(context: FinancialSnapshot): string {
   if (interestDiff <= 0) {
     return "In your case, snowball and avalanche land in about the same place — stick with snowball for the motivational wins.";
   }
-  return `Switching to avalanche would save about $${interestDiff} in interest, but you'd lose the quick psychological wins of knocking out small balances first. Dave Ramsey's guidance — and Zero's default — is to stick with snowball unless the interest gap is large.`;
+  return `Switching to avalanche would save about $${interestDiff} in interest, but you'd lose the quick psychological wins of knocking out small balances first. Zero's default guidance is to stick with snowball unless the interest gap is large.`;
 }
 
 function debtFreeSummary(context: FinancialSnapshot): string {
@@ -107,7 +107,7 @@ function interestSummary(context: FinancialSnapshot): string {
 }
 
 function defaultSummary(context: FinancialSnapshot): string {
-  const stepText = `You're on Baby Step ${context.babyStep}: ${BABY_STEP_TITLES[context.babyStep]}.`;
+  const stepText = `Your current goal is to ${goalStage(context.goalStage).title.charAt(0).toLowerCase()}${goalStage(context.goalStage).title.slice(1)}.`;
   const focus = focusDebt(context);
   if (focus) {
     const days = daysUntilNextDueDate(focus, context.referenceDate);

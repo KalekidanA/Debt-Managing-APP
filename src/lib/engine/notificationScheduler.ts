@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { currentBabyStep } from "./babyStep";
+import { currentGoalStage } from "./goals";
 import { daysUntilNextDueDate, nextDueDate, type Debt } from "./debt";
 import { currentTarget } from "./debtOrganizer";
 import { emergencyFundRemaining, type FinancialProfile } from "./financialProfile";
@@ -30,28 +30,28 @@ function dayKey(date: Date): string {
 }
 
 /** The single daily morning notification: a one-line status on the current
- * focus debt (or the emergency fund, if still on Baby Step 1). */
+ * focus debt (or the emergency fund, if that's still the current goal). */
 export function dailyMorningReminder(
   profile: FinancialProfile,
   debts: Debt[],
   strategy: PayoffStrategy,
   referenceDate: Date = new Date()
 ): ReminderPlan | undefined {
-  const step = currentBabyStep(profile, debts);
+  const stage = currentGoalStage(profile, debts);
   const key = dayKey(referenceDate);
 
-  if (step === 1) {
+  if (stage === "starterSafetyNet") {
     const remaining = emergencyFundRemaining(profile);
     return {
       id: `daily-${key}`,
       fireDate: referenceDate,
-      title: "Baby Step 1",
-      body: `$${round2(remaining)} left to reach your $1,000 starter emergency fund.`,
+      title: "Current goal",
+      body: `$${round2(remaining)} left to reach your $${profile.emergencyFundTarget} starter emergency fund.`,
       isCritical: false,
     };
   }
 
-  if (step === 2) {
+  if (stage === "debtFree") {
     const target = currentTarget(debts, strategy);
     if (!target) return undefined;
     const daysLeft = daysUntilNextDueDate(target, referenceDate);

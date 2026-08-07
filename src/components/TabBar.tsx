@@ -39,6 +39,16 @@ function AdviceIcon(active: boolean) {
   );
 }
 
+function GoalsIcon(active: boolean) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="12" r="5" />
+      <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 function AIIcon(active: boolean) {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
@@ -51,6 +61,7 @@ function AIIcon(active: boolean) {
 const TABS: TabDef[] = [
   { href: "/", label: "Home", icon: HomeIcon },
   { href: "/debts", label: "Debts", icon: DebtsIcon },
+  { href: "/goals", label: "Goals", icon: GoalsIcon },
   { href: "/advice", label: "Advice", icon: AdviceIcon },
   { href: "/ai", label: "AI", icon: AIIcon },
 ];
