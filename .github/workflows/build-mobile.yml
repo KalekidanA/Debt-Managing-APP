@@ -8,6 +8,10 @@ on:
 jobs:
   android:
     runs-on: ubuntu-latest
+    # `secrets` isn't a valid context inside step `if:` conditions, so the
+    # presence check happens once here (env context is allowed in `if:`).
+    env:
+      HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -30,7 +34,7 @@ jobs:
       # Secrets and variables -> Actions on GitHub). Until then, only the
       # unsigned debug APK below gets built — nothing fails.
       - name: Write release keystore
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        if: ${{ env.HAS_KEYSTORE == 'true' }}
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/release.jks
           printf 'storeFile=release.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
@@ -49,14 +53,14 @@ jobs:
           path: android/app/build/outputs/apk/debug/app-debug.apk
 
       - name: Build signed release bundle
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        if: ${{ env.HAS_KEYSTORE == 'true' }}
         working-directory: android
         env:
           ANDROID_VERSION_CODE: ${{ github.run_number }}
         run: ./gradlew bundleRelease
 
       - uses: actions/upload-artifact@v4
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        if: ${{ env.HAS_KEYSTORE == 'true' }}
         with:
           name: zero-release.aab
           path: android/app/build/outputs/bundle/release/app-release.aab
