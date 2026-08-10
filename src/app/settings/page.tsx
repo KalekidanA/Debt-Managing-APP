@@ -126,6 +126,9 @@ function SettingsContent() {
             All of your data — income, debts, and progress — is stored only on this device. Nothing is sent to a
             server.
           </p>
+          <Link href="/privacy" className="mt-2 inline-block text-sm font-medium text-primary">
+            Privacy Policy →
+          </Link>
         </Card>
 
         <Card className="border-critical/30">
