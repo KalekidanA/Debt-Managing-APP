@@ -21,21 +21,21 @@ export default function PrivacyPage() {
         <Card>
           <p className="font-semibold text-primary">The short version</p>
           <p className="mt-1 text-muted-foreground">
-            Zero doesn&apos;t have a server for your financial data. Everything you enter — income, debts,
-            balances, chat messages — is stored only in your browser or on your device. We never receive it, see
-            it, or have any way to access it. There is nothing for us to sell, leak, or hand over, because we
-            never have it in the first place.
+            Zero doesn&apos;t have a server for your financial data. Everything you enter — income, expenses,
+            debts, balances — is stored only in your browser or on your device. We never receive it, see it, or
+            have any way to access it. There is nothing for us to sell, leak, or hand over, because we never have
+            it in the first place.
           </p>
         </Card>
 
         <Card>
           <p className="font-semibold">What Zero stores, and where</p>
           <p className="mt-1 text-muted-foreground">
-            All financial information you enter — income, expenses, debts, balances, interest rates, your chat
-            history with the AI advisor, and your progress/achievements — is saved locally using your browser&apos;s
-            or device&apos;s on-device storage (IndexedDB). It is not transmitted to Zero, its developer, or any
-            third party. If you use the installed app on iOS or Android, the same rule applies: your data lives on
-            that device, inside that app&apos;s private storage.
+            All financial information you enter — income and expenses logged on the Wallet tab, debts, balances,
+            interest rates, and your progress/achievements — is saved locally using your browser&apos;s or
+            device&apos;s on-device storage (IndexedDB). It is not transmitted to Zero, its developer, or any third
+            party. If you use the installed app on iOS or Android, the same rule applies: your data lives on that
+            device, inside that app&apos;s private storage.
           </p>
         </Card>
 

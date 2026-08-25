@@ -25,8 +25,6 @@ export default function SettingsPage() {
 function SettingsContent() {
   const router = useRouter();
   const { state, setProfile, resetAll } = useAppState();
-  const [income, setIncome] = useState(String(state.profile.monthlyIncome || ""));
-  const [expenses, setExpenses] = useState(String(state.profile.monthlyExpenses || ""));
   const [fundSaved, setFundSaved] = useState(String(state.profile.emergencyFundSaved || ""));
   const [fundTarget, setFundTarget] = useState(String(state.profile.emergencyFundTarget || 1000));
   const [saved, setSaved] = useState(false);
@@ -35,8 +33,6 @@ function SettingsContent() {
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
     const profile: FinancialProfile = {
-      monthlyIncome: Number(income) || 0,
-      monthlyExpenses: Number(expenses) || 0,
       emergencyFundSaved: Number(fundSaved) || 0,
       emergencyFundTarget: Number(fundTarget) || 1000,
     };
@@ -68,28 +64,7 @@ function SettingsContent() {
       <div className="flex flex-col gap-4">
         <Card>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <p className="text-sm font-semibold text-foreground">Income & expenses</p>
-            <Field
-              label="Monthly take-home income"
-              fieldPrefix="$"
-              type="number"
-              inputMode="decimal"
-              min={0}
-              step="0.01"
-              value={income}
-              onChange={(e) => setIncome(e.target.value)}
-            />
-            <Field
-              label="Monthly bills & expenses"
-              hint="Everything except debt minimums."
-              fieldPrefix="$"
-              type="number"
-              inputMode="decimal"
-              min={0}
-              step="0.01"
-              value={expenses}
-              onChange={(e) => setExpenses(e.target.value)}
-            />
+            <p className="text-sm font-semibold text-foreground">Emergency fund</p>
             <div className="grid grid-cols-2 gap-3">
               <Field
                 label="Emergency fund saved"
@@ -119,6 +94,17 @@ function SettingsContent() {
         </Card>
 
         <NotificationsCard />
+
+        <Card>
+          <p className="text-sm font-semibold text-foreground">Income & expenses</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Logged on the Wallet tab as you earn and spend, not set here — Zero averages them monthly so they stay
+            accurate even if they change often.
+          </p>
+          <Link href="/wallet" className="mt-2 inline-block text-sm font-medium text-primary">
+            Go to Wallet →
+          </Link>
+        </Card>
 
         <Card>
           <p className="text-sm font-semibold text-foreground">About</p>

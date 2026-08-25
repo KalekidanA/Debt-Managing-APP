@@ -1,5 +1,5 @@
-import type { FinancialSnapshot } from "./aiContext";
-import { focusDebt } from "./aiContext";
+import type { FinancialSnapshot } from "./financialSnapshot";
+import { focusDebt } from "./financialSnapshot";
 import { compareStrategies, impactOfExtraPayment } from "./payoffCalculator";
 import { round2 } from "./utils";
 
@@ -14,14 +14,14 @@ export interface BudgetBreakdown {
 }
 
 export function computeBudget(snapshot: FinancialSnapshot): BudgetBreakdown {
-  const { profile, debts, extraMonthlyPayment } = snapshot;
-  const surplus = round2(profile.monthlyIncome - profile.monthlyExpenses);
+  const { debts, extraMonthlyPayment, averageMonthlyIncome, averageMonthlyExpenses } = snapshot;
+  const surplus = round2(averageMonthlyIncome - averageMonthlyExpenses);
   const totalMinimums = round2(debts.reduce((sum, d) => sum + (d.balance > 0 ? d.minimumPayment : 0), 0));
   const afterMinimums = round2(surplus - totalMinimums);
   const unallocated = round2(afterMinimums - extraMonthlyPayment);
   return {
-    monthlyIncome: profile.monthlyIncome,
-    monthlyExpenses: profile.monthlyExpenses,
+    monthlyIncome: averageMonthlyIncome,
+    monthlyExpenses: averageMonthlyExpenses,
     surplus,
     totalMinimums,
     afterMinimums,
@@ -40,9 +40,8 @@ export interface AdviceTip {
 }
 
 /** Rule-based coaching tips built entirely from numbers already in the
- * snapshot — no network calls, works before the AI tab's real LLM is wired
- * up. Ordered roughly by how much the tip should matter to the user right
- * now (warnings and money-on-the-table first). */
+ * snapshot — no network calls. Ordered roughly by how much the tip should
+ * matter to the user right now (warnings and money-on-the-table first). */
 export function generateAdvice(snapshot: FinancialSnapshot, budget: BudgetBreakdown): AdviceTip[] {
   const tips: AdviceTip[] = [];
 

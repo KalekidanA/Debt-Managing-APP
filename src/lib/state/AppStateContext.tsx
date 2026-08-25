@@ -1,11 +1,11 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import type { AIChatMessage } from "@/lib/engine/aiAdvisor";
 import { detectNewlyPaidOffDebts, detectNewMilestones, type CelebrationEvent } from "@/lib/engine/celebrations";
 import type { Debt } from "@/lib/engine/debt";
 import { DEFAULT_FINANCIAL_PROFILE, type FinancialProfile } from "@/lib/engine/financialProfile";
 import { DEFAULT_PAYOFF_STRATEGY, type PayoffStrategy } from "@/lib/engine/payoffStrategy";
+import type { WalletTransaction } from "@/lib/engine/wallet";
 import { loadAppState, saveAppState } from "@/lib/storage/db";
 
 export interface AppState {
@@ -13,7 +13,6 @@ export interface AppState {
   debts: Debt[];
   strategy: PayoffStrategy;
   extraMonthlyPayment: number;
-  chatMessages: AIChatMessage[];
   hasCompletedOnboarding: boolean;
   /** The highest total (non-mortgage) debt ever recorded, used as the
    * denominator for "% of debt paid off so far." Auto-expands if a
@@ -29,6 +28,10 @@ export interface AppState {
    * doesn't repeat every time the app is reopened. Capped so it can't grow
    * unbounded over months of use. */
   shownReminderIds: string[];
+  /** The wallet's full transaction ledger — income, expenses, and debt
+   * payments. This is the only source of truth for cash on hand and for
+   * the average-monthly-income/expenses figures on the Wallet tab. */
+  walletTransactions: WalletTransaction[];
 }
 
 const DEFAULT_STATE: AppState = {
@@ -36,12 +39,12 @@ const DEFAULT_STATE: AppState = {
   debts: [],
   strategy: DEFAULT_PAYOFF_STRATEGY,
   extraMonthlyPayment: 0,
-  chatMessages: [],
   hasCompletedOnboarding: false,
   debtBaseline: 0,
   celebrations: [],
   notificationsEnabled: false,
   shownReminderIds: [],
+  walletTransactions: [],
 };
 
 const MAX_SHOWN_REMINDER_IDS = 300;
@@ -103,11 +106,16 @@ interface AppStateContextValue {
   removeDebt: (id: string) => void;
   setStrategy: (strategy: PayoffStrategy) => void;
   setExtraMonthlyPayment: (amount: number) => void;
-  addChatMessage: (message: AIChatMessage) => void;
   completeOnboarding: () => void;
   markCelebrationSeen: (id: string) => void;
   setNotificationsEnabled: (enabled: boolean) => void;
   markRemindersShown: (ids: string[]) => void;
+  addWalletTransaction: (transaction: WalletTransaction) => void;
+  removeWalletTransaction: (id: string) => void;
+  /** Logs a real payment toward a debt: reduces that debt's balance (and
+   * runs the same celebration detection as editing it directly) and
+   * records the cash leaving the wallet, in one atomic update. */
+  logDebtPayment: (debtId: string, amount: number, date: Date, note?: string) => void;
   resetAll: () => void;
 }
 
@@ -158,10 +166,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, extraMonthlyPayment: amount }));
   }, []);
 
-  const addChatMessage = useCallback((message: AIChatMessage) => {
-    setState((prev) => ({ ...prev, chatMessages: [...prev.chatMessages, message] }));
-  }, []);
-
   const completeOnboarding = useCallback(() => {
     setState((prev) => ({ ...prev, hasCompletedOnboarding: true }));
   }, []);
@@ -186,6 +190,36 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const addWalletTransaction = useCallback((transaction: WalletTransaction) => {
+    setState((prev) => ({ ...prev, walletTransactions: [...prev.walletTransactions, transaction] }));
+  }, []);
+
+  const removeWalletTransaction = useCallback((id: string) => {
+    setState((prev) => ({ ...prev, walletTransactions: prev.walletTransactions.filter((t) => t.id !== id) }));
+  }, []);
+
+  const logDebtPayment = useCallback((debtId: string, amount: number, date: Date, note?: string) => {
+    setState((prev) => {
+      const debt = prev.debts.find((d) => d.id === debtId);
+      if (!debt || amount <= 0) return prev;
+      const newBalance = Math.max(debt.balance - amount, 0);
+      const withDebtChange = applyDebtsChange(
+        prev,
+        prev.debts.map((d) => (d.id === debtId ? { ...d, balance: newBalance } : d))
+      );
+      const transaction: WalletTransaction = {
+        id: crypto.randomUUID(),
+        type: "debtPayment",
+        amount,
+        date,
+        note,
+        debtId,
+        debtName: debt.name,
+      };
+      return { ...withDebtChange, walletTransactions: [...withDebtChange.walletTransactions, transaction] };
+    });
+  }, []);
+
   const resetAll = useCallback(() => {
     setState(DEFAULT_STATE);
   }, []);
@@ -200,11 +234,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       removeDebt,
       setStrategy,
       setExtraMonthlyPayment,
-      addChatMessage,
       completeOnboarding,
       markCelebrationSeen,
       setNotificationsEnabled,
       markRemindersShown,
+      addWalletTransaction,
+      removeWalletTransaction,
+      logDebtPayment,
       resetAll,
     }),
     [
@@ -216,11 +252,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       removeDebt,
       setStrategy,
       setExtraMonthlyPayment,
-      addChatMessage,
       completeOnboarding,
       markCelebrationSeen,
       setNotificationsEnabled,
       markRemindersShown,
+      addWalletTransaction,
+      removeWalletTransaction,
+      logDebtPayment,
       resetAll,
     ]
   );

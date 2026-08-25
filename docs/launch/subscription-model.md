@@ -16,26 +16,26 @@ max on free," no time-limited trial). Two reasons, not just one:
    experience is genuinely complete, not a demo.
 
 What's monetized instead: **going deeper once someone is already
-committed to using Zero seriously** — advanced planning, real AI
-conversation, cross-device access, and reporting. These are things a
-casual or first-time user doesn't miss, but an engaged user (weeks in,
-actively paying down debt) starts to want.
+committed to using Zero seriously** — a real AI advisor, advanced
+planning, cross-device access, and reporting. These are things a casual
+or first-time user doesn't miss, but an engaged user (weeks in, actively
+paying down debt) starts to want.
 
 ## Free tier — everything that defines "does this work for me"
 
 - Unlimited debts, full snowball & avalanche calculators (real
   amortization math, not an estimate)
-- Home dashboard: current goal, debt-free date, interest saved, focus
-  debt
-- Full Debts tab (add/edit/delete, strategy toggle, extra payment)
-- Goals tab: roadmap **and** the full celebration/achievement history
-  — this is the retention and shareability engine, it stays free
+- Home dashboard: current goal, financial snapshot, next debts up,
+  debt-free date, interest saved, total paid vs. remaining
+- Full Debts tab (add/edit/delete, strategy toggle, extra payment, log
+  real payments) plus the full celebration/achievement history — this is
+  the retention and shareability engine, it stays free
+- Wallet tab: unlimited income/expense logging and the full financial
+  statement (average monthly income/expenses, net income, cash available
+  for debt) — genuinely useful budgeting on its own, not a teaser
 - Advice tab: budget breakdown + the existing rule-based tips
   (unassigned-surplus alerts, late-payment cost, snowball vs. avalanche
   comparison)
-- The rule-based AI advisor (today's implementation) — deterministic,
-  free-to-run, and already genuinely useful for "what if I paid $50
-  more" style questions
 - Daily + critical local notifications
 
 ## Zero Plus — the paid tier
@@ -50,15 +50,13 @@ adopters, and generates upfront cash before subscription revenue ramps.
 
 What's behind it:
 
-1. **Real AI advisor.** Once the mock rule-based advisor is swapped for
-   an actual Claude-powered one (see the app's README roadmap), this is
-   the natural gate — it's the one feature with a real, ongoing
-   per-message cost to run, so it's the cleanest place to put a paywall
-   without it feeling arbitrary. Free users keep the existing rule-based
-   advisor (still useful); Plus unlocks open-ended conversation, memory
-   of prior context, and handling for messier real-life scenarios
-   ("I'm having a baby in 6 months — how does that change my plan?")
-   that pattern-matching can't cover.
+1. **AI advisor.** A real, Claude-powered advisor (see the app's README
+   roadmap) is the natural first Plus feature to build — it's the one
+   feature with a real, ongoing per-message cost to run, so it's the
+   cleanest place to put a paywall without it feeling arbitrary. Open-
+   ended conversation, memory of prior context, and handling for messier
+   real-life scenarios ("I'm having a baby in 6 months — how does that
+   change my plan?") that a free rule-based version couldn't cover.
 2. **Saved, comparable scenarios.** Instead of one-off "what if"
    answers, let Plus users save named scenarios ("Current Plan" vs. "If
    I get the raise" vs. "If I sell the car") and compare them side by

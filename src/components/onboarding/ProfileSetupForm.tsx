@@ -8,15 +8,11 @@ import { useAppState } from "@/lib/state/AppStateContext";
 
 export function ProfileSetupForm() {
   const { state, setProfile, completeOnboarding } = useAppState();
-  const [income, setIncome] = useState(state.profile.monthlyIncome ? String(state.profile.monthlyIncome) : "");
-  const [expenses, setExpenses] = useState(state.profile.monthlyExpenses ? String(state.profile.monthlyExpenses) : "");
   const [fundSaved, setFundSaved] = useState(state.profile.emergencyFundSaved ? String(state.profile.emergencyFundSaved) : "");
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setProfile({
-      monthlyIncome: Number(income) || 0,
-      monthlyExpenses: Number(expenses) || 0,
       emergencyFundSaved: Number(fundSaved) || 0,
       emergencyFundTarget: state.profile.emergencyFundTarget || 1000,
     });
@@ -30,37 +26,13 @@ export function ProfileSetupForm() {
         <h1 className="mt-1 text-3xl font-semibold tracking-tight text-foreground">Let&apos;s get you to zero debt.</h1>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
           Save a starter emergency fund first, then attack your debts smallest-to-largest with everything
-          you&apos;ve got. A few numbers to start.
+          you&apos;ve got. One number to start — you&apos;ll log income and expenses on the Wallet tab as they
+          happen.
         </p>
       </div>
 
       <Card>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <Field
-            label="Monthly take-home income"
-            fieldPrefix="$"
-            type="number"
-            inputMode="decimal"
-            min={0}
-            step="0.01"
-            placeholder="4,500"
-            value={income}
-            onChange={(e) => setIncome(e.target.value)}
-            required
-          />
-          <Field
-            label="Monthly bills & expenses"
-            hint="Rent/mortgage, utilities, groceries, insurance — everything except debt minimums."
-            fieldPrefix="$"
-            type="number"
-            inputMode="decimal"
-            min={0}
-            step="0.01"
-            placeholder="3,200"
-            value={expenses}
-            onChange={(e) => setExpenses(e.target.value)}
-            required
-          />
           <Field
             label="Cash saved right now"
             hint="Toward your $1,000 starter emergency fund goal."

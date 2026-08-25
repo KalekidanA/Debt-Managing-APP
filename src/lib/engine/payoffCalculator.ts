@@ -219,8 +219,8 @@ export function interestSavedVersusMinimumOnly(
 }
 
 /** Reruns the simulation with a modified extra payment to answer "what if
- * I paid $X more/less per month?" — used by the Advice and AI tabs to
- * quantify the cost of a decision in months and dollars. */
+ * I paid $X more/less per month?" — used by the Advice tab to quantify
+ * the cost of a decision in months and dollars. */
 export function impactOfExtraPayment(
   newExtraMonthlyPayment: number,
   basePlan: PayoffPlan,

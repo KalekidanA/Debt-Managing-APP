@@ -35,7 +35,7 @@ popular app in a different category. Two options:
 | Primary category | Finance | — |
 | Secondary category | Productivity | — |
 | Age rating | 4+ | — |
-| Promotional text (editable anytime, no review) | `New: milestone celebrations every $500 you pay off, plus an AI advisor for "what if" questions.` | 170 chars |
+| Promotional text (editable anytime, no review) | `New: milestone celebrations every $500 you pay off, plus a Wallet tab to track real income and expenses.` | 170 chars |
 
 **Keywords** (comma-separated, not shown publicly, 100 char limit):
 ```
@@ -69,11 +69,12 @@ bring to $0 gets its own moment — with its name, because you earned
 that. Your achievement history keeps every milestone, permanently, so
 you can see how far you've actually come on a bad day.
 
-ASK BEFORE YOU DECIDE
-The built-in advisor answers real "what if" questions instantly:
-"What if I paid $100 extra a month?" "What happens if I miss a
-payment?" "Should I switch to avalanche?" — using your actual numbers,
-not generic advice.
+KNOW YOUR REAL NUMBERS
+Log income and expenses on the Wallet tab as they happen — Zero
+averages them monthly, so it stays accurate even if what you earn
+changes often (built for freelancers and business owners, not just
+salaried budgets). See your cash on hand, your net income, and exactly
+how much is realistically left over for debt each month.
 
 PRIVATE BY DESIGN
 Zero doesn't ask you to link a bank account. There's no account to
@@ -114,11 +115,11 @@ set (can be captured directly from the deployed web app at the right
 viewport sizes, or from the Simulator/an Android emulator once you're
 running the native build):
 
-1. Home tab — debt-free countdown ring + focus debt card
+1. Home tab — debt-free countdown ring + financial snapshot + "Up next" debts
 2. Debts tab — the snowball-ordered list with the "Paying next" badge
 3. A celebration moment (milestone or account-paid-off overlay)
-4. Advice tab — the budget breakdown + a tip card
-5. AI tab — a "what if" conversation
+4. Wallet tab — the financial statement + transaction history
+5. Advice tab — the budget breakdown + a tip card
 
 iOS needs these per required device size (6.7", 6.5", 5.5" — check
 current App Store Connect requirements, they change); Android needs at

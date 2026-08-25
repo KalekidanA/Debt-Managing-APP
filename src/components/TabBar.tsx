@@ -39,21 +39,12 @@ function AdviceIcon(active: boolean) {
   );
 }
 
-function GoalsIcon(active: boolean) {
+function WalletIcon(active: boolean) {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="9" />
-      <circle cx="12" cy="12" r="5" />
-      <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
-function AIIcon(active: boolean) {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 3v3M12 18v3M3 12h3M18 12h3" />
-      <path d="M12 8a4 4 0 1 0 4 4 4 4 0 0 0-4-4Z" />
+      <rect x="3" y="6" width="18" height="14" rx="2.2" />
+      <path d="M3 10h18" />
+      <path d="M15 14.5h3" />
     </svg>
   );
 }
@@ -61,9 +52,8 @@ function AIIcon(active: boolean) {
 const TABS: TabDef[] = [
   { href: "/", label: "Home", icon: HomeIcon },
   { href: "/debts", label: "Debts", icon: DebtsIcon },
-  { href: "/goals", label: "Goals", icon: GoalsIcon },
+  { href: "/wallet", label: "Wallet", icon: WalletIcon },
   { href: "/advice", label: "Advice", icon: AdviceIcon },
-  { href: "/ai", label: "AI", icon: AIIcon },
 ];
 
 export function TabBar() {

@@ -1,10 +1,11 @@
 import { clamp } from "./utils";
 
-/** The user's overall financial picture: what comes in, what goes out, and
- * how much of the starter emergency fund goal has been saved. */
+/** How much of the starter emergency fund goal has been saved. Income and
+ * expenses are no longer tracked here as static settings — they're derived
+ * from actual logged transactions on the Wallet tab (see wallet.ts), since
+ * they change month to month for most people (a business owner especially)
+ * and a single static number goes stale immediately. */
 export interface FinancialProfile {
-  monthlyIncome: number;
-  monthlyExpenses: number;
   emergencyFundSaved: number;
   /** The starter emergency fund target. Defaults to $1,000 but is kept
    * configurable in case the household situation calls for more. */
@@ -12,8 +13,6 @@ export interface FinancialProfile {
 }
 
 export const DEFAULT_FINANCIAL_PROFILE: FinancialProfile = {
-  monthlyIncome: 0,
-  monthlyExpenses: 0,
   emergencyFundSaved: 0,
   emergencyFundTarget: 1000,
 };
@@ -29,11 +28,4 @@ export function emergencyFundRemaining(profile: FinancialProfile): number {
 export function emergencyFundProgress(profile: FinancialProfile): number {
   if (profile.emergencyFundTarget <= 0) return 1;
   return clamp(profile.emergencyFundSaved / profile.emergencyFundTarget, 0, 1);
-}
-
-/** Income left over after fixed monthly expenses — the pool available for
- * emergency-fund savings or extra debt payments, before minimum debt
- * payments are subtracted. */
-export function monthlySurplus(profile: FinancialProfile): number {
-  return profile.monthlyIncome - profile.monthlyExpenses;
 }

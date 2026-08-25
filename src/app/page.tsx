@@ -10,8 +10,10 @@ import { StatTile } from "@/components/ui/StatTile";
 import { EmptyDebtsPrompt } from "@/components/home/EmptyDebtsPrompt";
 import { ProfileSetupForm } from "@/components/onboarding/ProfileSetupForm";
 import { goalStage, nextGoalStage, type GoalStageId } from "@/lib/engine/goals";
-import { DEBT_TYPE_META, daysUntilNextDueDate } from "@/lib/engine/debt";
+import { daysUntilNextDueDate, type Debt } from "@/lib/engine/debt";
+import type { DebtPayoffResult, PayoffPlan } from "@/lib/engine/payoffCalculator";
 import { emergencyFundProgress, emergencyFundRemaining } from "@/lib/engine/financialProfile";
+import type { FinancialStatement } from "@/lib/engine/wallet";
 import { formatUSD } from "@/lib/engine/utils";
 import { useAppState } from "@/lib/state/AppStateContext";
 import { useFinancials } from "@/lib/state/useFinancials";
@@ -48,8 +50,17 @@ export default function HomePage() {
 
 function Dashboard() {
   const { state } = useAppState();
-  const { focusDebt, currentPlan, savingsVsMinimum, totalDebt, debtPaidOffProgress, referenceDate, snapshot } =
-    useFinancials();
+  const {
+    orderedDebts,
+    currentPlan,
+    savingsVsMinimum,
+    totalDebt,
+    totalPaidSoFar,
+    debtPaidOffProgress,
+    referenceDate,
+    snapshot,
+    financialStatement,
+  } = useFinancials();
   const stage = snapshot.goalStage;
   const next = nextGoalStage(stage);
   const hasDebts = state.debts.length > 0;
@@ -114,15 +125,20 @@ function Dashboard() {
           )}
         </Card>
 
+        <FinancialSnapshotCard statement={financialStatement} />
+
         {!hasDebts && <EmptyDebtsPrompt />}
 
-        {hasDebts && focusDebt && stage === "debtFree" && (
-          <FocusDebtCard debtId={focusDebt.id} referenceDate={referenceDate} />
+        {hasDebts && (
+          <UpNextCard debts={orderedDebts} currentPlan={currentPlan} referenceDate={referenceDate} />
+        )}
+
+        {hasDebts && (
+          <PayoffProgressCard totalPaidSoFar={totalPaidSoFar} totalDebt={totalDebt} progress={debtPaidOffProgress} />
         )}
 
         {hasDebts && (
           <div className="grid grid-cols-2 gap-3">
-            <StatTile label="Total debt" value={formatUSD(totalDebt)} />
             <StatTile
               label="Debt-free"
               value={currentPlan ? format(currentPlan.debtFreeDate, "MMM yyyy") : "—"}
@@ -133,7 +149,6 @@ function Dashboard() {
               value={savingsVsMinimum ? formatUSD(savingsVsMinimum.interestSaved) : "—"}
               hint="vs. minimums only"
             />
-            <StatTile label="Paid off" value={`${Math.round(debtPaidOffProgress * 100)}%`} hint="of peak debt" />
           </div>
         )}
 
@@ -216,37 +231,100 @@ function HeroCard({
   );
 }
 
-function FocusDebtCard({ debtId, referenceDate }: { debtId: string; referenceDate: Date }) {
-  const { state } = useAppState();
-  const debt = state.debts.find((d) => d.id === debtId);
-  if (!debt) return null;
-  const daysLeft = daysUntilNextDueDate(debt, referenceDate);
-  const meta = DEBT_TYPE_META[debt.type];
+function FinancialSnapshotCard({ statement }: { statement: FinancialStatement }) {
+  return (
+    <Link href="/wallet" className="block">
+      <Card className="transition-colors hover:border-primary/40">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-semibold text-foreground">Financial snapshot</p>
+          <span className="text-xs font-medium text-primary">Wallet →</span>
+        </div>
+        <div className="mt-3 grid grid-cols-3 gap-3">
+          <div>
+            <p className="text-xs text-muted-foreground">Cash on hand</p>
+            <p className={`mt-0.5 text-sm font-semibold tabular-nums ${statement.walletBalance < 0 ? "text-critical" : "text-foreground"}`}>
+              {formatUSD(statement.walletBalance)}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Net income</p>
+            <p className="mt-0.5 text-sm font-semibold tabular-nums text-foreground">{formatUSD(statement.netMonthlyIncome)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">For debt</p>
+            <p className="mt-0.5 text-sm font-semibold tabular-nums text-foreground">{formatUSD(statement.cashAvailableForDebt)}</p>
+          </div>
+        </div>
+      </Card>
+    </Link>
+  );
+}
+
+function UpNextCard({
+  debts,
+  currentPlan,
+  referenceDate,
+}: {
+  debts: Debt[];
+  currentPlan: PayoffPlan | undefined;
+  referenceDate: Date;
+}) {
+  const upNext = debts.slice(0, 3);
+  if (upNext.length === 0) return null;
+  const resultFor = (id: string): DebtPayoffResult | undefined => currentPlan?.perDebtResults.find((r) => r.debtId === id);
 
   return (
     <Card>
-      <div className="flex items-center justify-between">
-        <p className="text-xs font-medium uppercase tracking-wide text-primary">Your focus debt</p>
-        <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-medium text-primary">
-          {meta.displayName}
-        </span>
+      <p className="text-sm font-semibold text-foreground">Up next</p>
+      <div className="mt-1 divide-y divide-border">
+        {upNext.map((debt, i) => {
+          const result = resultFor(debt.id);
+          const daysLeft = daysUntilNextDueDate(debt, referenceDate);
+          return (
+            <div key={debt.id} className="flex items-center justify-between gap-3 py-3">
+              <div className="flex min-w-0 items-center gap-2.5">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary-soft text-[10px] font-semibold text-primary">
+                  {i + 1}
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-foreground">{debt.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatUSD(debt.balance)} remaining
+                    {i === 0 && (
+                      <span className={daysLeft <= 3 ? "text-critical" : undefined}> · due in {daysLeft}d</span>
+                    )}
+                  </p>
+                </div>
+              </div>
+              <div className="shrink-0 text-right">
+                <p className="text-xs text-muted-foreground">Paid off by</p>
+                <p className="text-sm font-medium text-foreground">{result ? format(result.payoffDate, "MMM yyyy") : "—"}</p>
+              </div>
+            </div>
+          );
+        })}
       </div>
-      <p className="mt-1.5 text-lg font-semibold text-foreground">{debt.name}</p>
-      <div className="mt-3 flex items-end justify-between">
-        <div>
-          <p className="text-xs text-muted-foreground">Balance</p>
-          <p className="text-base font-semibold tabular-nums text-foreground">{formatUSD(debt.balance)}</p>
-        </div>
-        <div className="text-right">
-          <p className="text-xs text-muted-foreground">Payment due</p>
-          <p className={`text-base font-semibold tabular-nums ${daysLeft <= 3 ? "text-critical" : "text-foreground"}`}>
-            {daysLeft === 0 ? "Today" : daysLeft === 1 ? "Tomorrow" : `${daysLeft} days`}
-          </p>
-        </div>
+    </Card>
+  );
+}
+
+function PayoffProgressCard({
+  totalPaidSoFar,
+  totalDebt,
+  progress,
+}: {
+  totalPaidSoFar: number;
+  totalDebt: number;
+  progress: number;
+}) {
+  return (
+    <Card>
+      <p className="text-sm font-semibold text-foreground">Debt payments</p>
+      <ProgressBar value={progress} className="mt-3" />
+      <div className="mt-2 flex items-center justify-between text-xs">
+        <span className="text-primary">{formatUSD(totalPaidSoFar)} paid</span>
+        <span className="text-muted-foreground">{formatUSD(totalDebt)} left</span>
       </div>
-      {debt.originalBalance && debt.originalBalance > 0 && (
-        <ProgressBar value={1 - debt.balance / debt.originalBalance} className="mt-4" />
-      )}
     </Card>
   );
 }

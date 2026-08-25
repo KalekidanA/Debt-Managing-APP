@@ -6,24 +6,29 @@ you've got.
 
 ## Features
 
-- **Home** — your current goal, a payoff-progress ring, debt-free date,
-  interest saved vs. paying minimums only, and your current focus debt.
-- **Debts** — add/edit credit cards, auto loans, student loans, etc.; toggle
-  between the debt snowball (default) and debt avalanche strategies; set an
-  extra monthly payment.
-- **Goals** — a roadmap of Current Goal → Next Goal → what comes after, plus
-  a permanent achievement history.
+- **Home** — your current goal, a payoff-progress ring, a financial
+  snapshot (cash on hand, net income, cash available for debt), the next
+  3 debts up in payoff order with balance + projected payoff date, total
+  paid vs. remaining across all debts, debt-free date, and interest saved
+  vs. paying minimums only.
+- **Debts** — add/edit credit cards, auto loans, student loans, etc.;
+  toggle between the debt snowball (default) and debt avalanche
+  strategies; set an extra monthly payment; log a real payment against
+  any debt (reduces its balance and your Wallet cash together); a
+  permanent achievement history of every milestone.
+- **Wallet** — a running cash register: log income and expenses as they
+  happen, see your cash-on-hand balance, and a financial statement
+  (average monthly income/expenses, net income, cash available for debt)
+  that's averaged across every month you've logged — built for income
+  that varies (e.g. running a business), not a static monthly setting.
 - **Advice** — a monthly budget breakdown and personalized, numbers-backed
   tips (unassigned surplus, snowball vs. avalanche interest delta, the cost
   of a late payment, what an extra $100/month would do).
-- **AI** — a chat tab for "what if" questions ("what if I paid $50 extra a
-  month?", "how long until I'm debt-free?"), currently answered by a
-  rule-based mock advisor that computes real numbers from your data.
-- **Settings** (via the gear icon on Home) — edit income/expenses/emergency
-  fund after onboarding, enable local notifications, or reset all local data.
+- **Settings** (via the gear icon on Home) — edit your emergency fund
+  after onboarding, enable local notifications, or reset all local data.
 - **Celebrations** — a full-screen celebration fires every $500 of
   cumulative debt paid off, and again whenever an individual account hits
-  $0 (named by account), each logged permanently on the Goals tab.
+  $0 (named by account), each logged permanently on the Debts tab.
 - **Notifications** — a daily focus-debt update plus 5/3/1-day countdown
   alerts, computed and shown client-side (no server) whenever the app is
   open or regains focus; see `src/lib/notifications/scheduler-client.ts`
@@ -82,7 +87,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 Run the test suite (covers the payoff engine: snowball/avalanche ordering,
 amortization math, goal-stage transitions, notification thresholds,
-milestone/celebration detection):
+milestone/celebration detection, wallet balance/monthly averaging):
 
 ```bash
 npm test
@@ -92,13 +97,14 @@ npm test
 
 ```
 src/
-  app/                  Route pages: Home, Debts, Goals, Advice, AI (tabs),
+  app/                  Route pages: Home, Debts, Wallet, Advice (tabs),
                          Settings, and Privacy (reached via Home/Settings)
   components/           UI components, grouped by feature + a shared ui/ kit
   lib/engine/            Pure TypeScript domain logic (debts, payoff math,
                          goal stages, advice, celebrations/milestones,
-                         notification scheduling, the mock AI advisor) — no
-                         React or browser APIs, fully unit tested
+                         the wallet ledger/financial statement, notification
+                         scheduling) — no React or browser APIs, fully
+                         unit tested
   lib/state/             React context + hooks wiring the engine to the UI
   lib/storage/           IndexedDB persistence
   lib/notifications/     Client-side notification scheduling
@@ -112,12 +118,10 @@ docs/launch/             Store listing copy, marketing strategy, subscription
 
 ## Roadmap / not yet wired up
 
-- **Real AI**: the AI tab currently uses a rule-based mock
-  (`src/lib/engine/aiAdvisor.ts`) that already computes real numbers from
-  your data. It's designed to be swapped for the real Claude API without
-  touching the UI — a real implementation just needs to match the same
-  `AIAdvisorRespond` function signature. (Planned as a paid-tier feature —
-  see `docs/launch/subscription-model.md`.)
+- **AI advisor**: removed for now to keep the app focused (see
+  `docs/launch/subscription-model.md`) — planned to come back later as a
+  real, Claude-powered paid feature rather than the earlier rule-based
+  mock, once there's a backend to run it against.
 - **True push notifications** (delivered even when the app is fully
   closed) need a server to trigger them — today's implementation is
   local-only/best-effort (see the Notifications feature above). This is

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { StrategyToggle } from "@/components/StrategyToggle";
+import { CelebrationHistory } from "@/components/celebrations/CelebrationHistory";
 import { DebtForm } from "@/components/debts/DebtForm";
 import { DebtRow } from "@/components/debts/DebtRow";
 import { Button } from "@/components/ui/Button";
@@ -11,6 +12,8 @@ import { Field } from "@/components/ui/Field";
 import { Sheet } from "@/components/ui/Sheet";
 import type { Debt } from "@/lib/engine/debt";
 import { formatUSD } from "@/lib/engine/utils";
+import { totalPaidTowardDebt } from "@/lib/engine/wallet";
+import { TransactionForm } from "@/components/wallet/TransactionForm";
 import { useAppState } from "@/lib/state/AppStateContext";
 import { useFinancials } from "@/lib/state/useFinancials";
 
@@ -18,11 +21,16 @@ export default function DebtsPage() {
   const { state, isLoaded, setExtraMonthlyPayment } = useAppState();
   const { orderedDebts, referenceDate, totalDebt } = useFinancials();
   const [editing, setEditing] = useState<Debt | "new" | null>(null);
+  const [loggingPaymentFor, setLoggingPaymentFor] = useState<string | null>(null);
 
   if (!isLoaded) return null;
 
   const mortgageDebts = state.debts.filter((d) => d.type === "mortgage");
   const paidOffDebts = state.debts.filter((d) => d.type !== "mortgage" && d.balance <= 0);
+
+  function paidTotalFor(debtId: string) {
+    return totalPaidTowardDebt(state.walletTransactions, debtId);
+  }
 
   return (
     <AppShell>
@@ -80,7 +88,9 @@ export default function DebtsPage() {
                 debt={debt}
                 isFocus={i === 0}
                 referenceDate={referenceDate}
+                paidTotal={paidTotalFor(debt.id)}
                 onClick={() => setEditing(debt)}
+                onLogPayment={() => setLoggingPaymentFor(debt.id)}
               />
             ))}
           </section>
@@ -90,7 +100,15 @@ export default function DebtsPage() {
           <section className="flex flex-col gap-2.5">
             <p className="px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Mortgage</p>
             {mortgageDebts.map((debt) => (
-              <DebtRow key={debt.id} debt={debt} isFocus={false} referenceDate={referenceDate} onClick={() => setEditing(debt)} />
+              <DebtRow
+                key={debt.id}
+                debt={debt}
+                isFocus={false}
+                referenceDate={referenceDate}
+                paidTotal={paidTotalFor(debt.id)}
+                onClick={() => setEditing(debt)}
+                onLogPayment={() => setLoggingPaymentFor(debt.id)}
+              />
             ))}
           </section>
         )}
@@ -101,15 +119,35 @@ export default function DebtsPage() {
               Paid off — {paidOffDebts.length}
             </p>
             {paidOffDebts.map((debt) => (
-              <DebtRow key={debt.id} debt={debt} isFocus={false} referenceDate={referenceDate} onClick={() => setEditing(debt)} />
+              <DebtRow
+                key={debt.id}
+                debt={debt}
+                isFocus={false}
+                referenceDate={referenceDate}
+                paidTotal={paidTotalFor(debt.id)}
+                onClick={() => setEditing(debt)}
+                onLogPayment={() => setLoggingPaymentFor(debt.id)}
+              />
             ))}
           </section>
         )}
+
+        <CelebrationHistory events={state.celebrations} />
       </div>
 
       <Sheet open={editing !== null} onClose={() => setEditing(null)} title={editing === "new" ? "Add a debt" : "Edit debt"}>
         {editing !== null && (
           <DebtForm existing={editing === "new" ? undefined : editing} onDone={() => setEditing(null)} />
+        )}
+      </Sheet>
+
+      <Sheet open={loggingPaymentFor !== null} onClose={() => setLoggingPaymentFor(null)} title="Log a payment">
+        {loggingPaymentFor !== null && (
+          <TransactionForm
+            initialType="debtPayment"
+            initialDebtId={loggingPaymentFor}
+            onDone={() => setLoggingPaymentFor(null)}
+          />
         )}
       </Sheet>
     </AppShell>
