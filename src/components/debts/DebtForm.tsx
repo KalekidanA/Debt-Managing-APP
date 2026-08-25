@@ -27,6 +27,8 @@ export function DebtForm({ existing, onDone }: DebtFormProps) {
   const [dueDay, setDueDay] = useState(existing ? String(existing.dueDayOfMonth) : "1");
   const [creditLimit, setCreditLimit] = useState(existing?.creditLimit ? String(existing.creditLimit) : "");
   const [originalBalance, setOriginalBalance] = useState(existing?.originalBalance ? String(existing.originalBalance) : "");
+  const [accountNickname, setAccountNickname] = useState(existing?.accountNickname ?? "");
+  const [accountLast4, setAccountLast4] = useState(existing?.accountLast4 ?? "");
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -40,6 +42,8 @@ export function DebtForm({ existing, onDone }: DebtFormProps) {
       dueDayOfMonth: clampDueDayOfMonth(Number(dueDay) || 1),
       creditLimit: creditLimit ? Number(creditLimit) : undefined,
       originalBalance: originalBalance ? Number(originalBalance) : undefined,
+      accountNickname: accountNickname.trim() || undefined,
+      accountLast4: accountLast4.trim() || undefined,
     };
     if (existing) {
       updateDebt(existing.id, payload);
@@ -141,6 +145,24 @@ export function DebtForm({ existing, onDone }: DebtFormProps) {
         value={originalBalance}
         onChange={(e) => setOriginalBalance(e.target.value)}
       />
+      <div className="grid grid-cols-2 gap-3">
+        <Field
+          label="Account nickname"
+          hint="Optional — where the payment comes from."
+          placeholder="Chase Checking"
+          value={accountNickname}
+          onChange={(e) => setAccountNickname(e.target.value)}
+        />
+        <Field
+          label="Last 4 digits"
+          hint="Optional"
+          placeholder="4821"
+          inputMode="numeric"
+          maxLength={4}
+          value={accountLast4}
+          onChange={(e) => setAccountLast4(e.target.value.replace(/\D/g, "").slice(0, 4))}
+        />
+      </div>
 
       <div className="mt-1 flex flex-col gap-2">
         <Button type="submit" className="w-full">

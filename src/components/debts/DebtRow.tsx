@@ -42,6 +42,12 @@ export function DebtRow({ debt, isFocus, referenceDate, paidTotal, onClick, onLo
           <p className="mt-0.5 text-xs text-muted-foreground">
             {meta.displayName} · {(debt.apr * 100).toFixed(2)}% APR
           </p>
+          {debt.accountNickname && (
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {debt.accountNickname}
+              {debt.accountLast4 && ` •••• ${debt.accountLast4}`}
+            </p>
+          )}
         </div>
         <div className="shrink-0 text-right">
           <p className="text-sm font-semibold tabular-nums text-foreground">{formatUSD(debt.balance)}</p>

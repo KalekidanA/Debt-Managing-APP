@@ -43,6 +43,12 @@ export interface Debt {
   creditLimit?: number;
   originalBalance?: number;
   notes?: string;
+  /** A friendly label for the account the payment comes out of, e.g.
+   * "Chase Checking" — not the debt account itself. */
+  accountNickname?: string;
+  /** Last 4 digits only, for recognition — never the full account/card
+   * number. */
+  accountLast4?: string;
 }
 
 export function monthlyInterestRate(debt: Pick<Debt, "apr">): number {

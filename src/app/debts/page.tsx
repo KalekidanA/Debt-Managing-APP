@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { StrategyToggle } from "@/components/StrategyToggle";
+import { BillsSection } from "@/components/bills/BillsSection";
 import { CelebrationHistory } from "@/components/celebrations/CelebrationHistory";
 import { DebtForm } from "@/components/debts/DebtForm";
 import { DebtRow } from "@/components/debts/DebtRow";
@@ -131,6 +132,8 @@ export default function DebtsPage() {
             ))}
           </section>
         )}
+
+        <BillsSection />
 
         <CelebrationHistory events={state.celebrations} />
       </div>

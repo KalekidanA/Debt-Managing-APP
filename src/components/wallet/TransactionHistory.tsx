@@ -51,6 +51,7 @@ function isPositive(type: WalletTransaction["type"]): boolean {
 function titleFor(t: WalletTransaction): string {
   if (t.type === "debtPayment") return `Payment to ${t.debtName}`;
   if (t.note) return t.note;
+  if (t.billName) return `${t.billName} payment`;
   if (t.type === "income") return "Income";
   if (t.type === "adjustment") return "Existing cash";
   return "Expense";

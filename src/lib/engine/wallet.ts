@@ -24,6 +24,11 @@ export interface WalletTransaction {
   /** Set only when type === "debtPayment". */
   debtId?: string;
   debtName?: string;
+  /** Set only when this expense is a payment toward a recurring Bill —
+   * lets the Bills tracker derive "paid this month" straight from the
+   * ledger instead of keeping its own separate paid/unpaid state. */
+  billId?: string;
+  billName?: string;
 }
 
 /** Current cash on hand: income and adjustments (existing cash) add,

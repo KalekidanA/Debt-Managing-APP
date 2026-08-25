@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { generateSalt, hashPin, verifyPin } from "@/lib/engine/appLock";
+import type { Bill } from "@/lib/engine/bills";
 import { detectNewlyPaidOffDebts, detectNewMilestones, type CelebrationEvent } from "@/lib/engine/celebrations";
 import type { Debt } from "@/lib/engine/debt";
 import { DEFAULT_FINANCIAL_PROFILE, type FinancialProfile } from "@/lib/engine/financialProfile";
@@ -45,6 +46,10 @@ export interface AppState {
    * payments. This is the only source of truth for cash on hand and for
    * the average-monthly-income/expenses figures on the Wallet tab. */
   walletTransactions: WalletTransaction[];
+  /** Recurring non-debt monthly expenses: rent, utilities, subscriptions,
+   * insurance, and the like. Paid status per month is derived from
+   * walletTransactions, not stored here. */
+  bills: Bill[];
 }
 
 const DEFAULT_STATE: AppState = {
@@ -59,6 +64,7 @@ const DEFAULT_STATE: AppState = {
   notificationsEnabled: false,
   shownReminderIds: [],
   walletTransactions: [],
+  bills: [],
 };
 
 const MAX_SHOWN_REMINDER_IDS = 300;
@@ -130,6 +136,13 @@ interface AppStateContextValue {
    * runs the same celebration detection as editing it directly) and
    * records the cash leaving the wallet, in one atomic update. */
   logDebtPayment: (debtId: string, amount: number, date: Date, note?: string) => void;
+  addBill: (bill: Bill) => void;
+  updateBill: (id: string, patch: Partial<Bill>) => void;
+  removeBill: (id: string) => void;
+  /** Logs a real payment toward a bill as a wallet expense transaction
+   * tagged with the bill's id — the same "ledger is the source of truth"
+   * pattern as logDebtPayment, just without a balance to reduce. */
+  logBillPayment: (billId: string, amount: number, date: Date, note?: string) => void;
   /** Turns the app lock on (or changes the PIN, if already on) by hashing
    * and storing a fresh salted hash of the given PIN. */
   enableAppLock: (pin: string) => void;
@@ -241,6 +254,35 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const addBill = useCallback((bill: Bill) => {
+    setState((prev) => ({ ...prev, bills: [...prev.bills, bill] }));
+  }, []);
+
+  const updateBill = useCallback((id: string, patch: Partial<Bill>) => {
+    setState((prev) => ({ ...prev, bills: prev.bills.map((b) => (b.id === id ? { ...b, ...patch } : b)) }));
+  }, []);
+
+  const removeBill = useCallback((id: string) => {
+    setState((prev) => ({ ...prev, bills: prev.bills.filter((b) => b.id !== id) }));
+  }, []);
+
+  const logBillPayment = useCallback((billId: string, amount: number, date: Date, note?: string) => {
+    setState((prev) => {
+      const bill = prev.bills.find((b) => b.id === billId);
+      if (!bill || amount <= 0) return prev;
+      const transaction: WalletTransaction = {
+        id: crypto.randomUUID(),
+        type: "expense",
+        amount,
+        date,
+        note,
+        billId,
+        billName: bill.name,
+      };
+      return { ...prev, walletTransactions: [...prev.walletTransactions, transaction] };
+    });
+  }, []);
+
   const enableAppLock = useCallback((pin: string) => {
     const salt = generateSalt();
     const pinHash = hashPin(pin, salt);
@@ -281,6 +323,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       addWalletTransaction,
       removeWalletTransaction,
       logDebtPayment,
+      addBill,
+      updateBill,
+      removeBill,
+      logBillPayment,
       enableAppLock,
       disableAppLock,
       verifyAppLockPin,
@@ -302,6 +348,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       addWalletTransaction,
       removeWalletTransaction,
       logDebtPayment,
+      addBill,
+      updateBill,
+      removeBill,
+      logBillPayment,
       enableAppLock,
       disableAppLock,
       verifyAppLockPin,
