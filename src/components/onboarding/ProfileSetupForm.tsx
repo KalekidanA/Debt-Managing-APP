@@ -44,7 +44,6 @@ export function ProfileSetupForm() {
             placeholder="0"
             value={fundSaved}
             onChange={(e) => setFundSaved(e.target.value)}
-            required
           />
           <Button type="submit" className="mt-2 w-full">
             Continue
