@@ -3,11 +3,17 @@ import type { Debt } from "./debt";
 import { round2 } from "./utils";
 
 /** A single entry in the user's cash register: money that came in, money
- * that went out, or a payment made toward a specific debt. This is the
- * only source of truth for the wallet balance and for the "average
- * monthly income/expenses" figures shown on the Wallet tab — there's no
- * separate static income/expense setting anywhere else in the app. */
-export type WalletTransactionType = "income" | "expense" | "debtPayment";
+ * that went out, a payment made toward a specific debt, or an adjustment
+ * (existing cash you already had, entered once to start the balance
+ * accurately). This is the only source of truth for the wallet balance and
+ * for the "average monthly income/expenses" figures shown on the Wallet
+ * tab — there's no separate static income/expense setting anywhere else in
+ * the app.
+ *
+ * "adjustment" is deliberately its own type rather than reusing "income":
+ * existing cash isn't something you earned that month, so counting it as
+ * income would inflate the average-monthly-income figure. */
+export type WalletTransactionType = "income" | "expense" | "debtPayment" | "adjustment";
 
 export interface WalletTransaction {
   id: string;
@@ -20,12 +26,12 @@ export interface WalletTransaction {
   debtName?: string;
 }
 
-/** Current cash on hand: every income entry adds, every expense or debt
- * payment subtracts. */
+/** Current cash on hand: income and adjustments (existing cash) add,
+ * expenses and debt payments subtract. */
 export function walletBalance(transactions: WalletTransaction[]): number {
   return round2(
     transactions.reduce((sum, t) => {
-      if (t.type === "income") return sum + t.amount;
+      if (t.type === "income" || t.type === "adjustment") return sum + t.amount;
       return sum - t.amount;
     }, 0)
   );

@@ -9,7 +9,15 @@ import { useAppState } from "@/lib/state/AppStateContext";
 const TYPE_LABELS: Record<WalletTransactionType, string> = {
   income: "Income",
   expense: "Expense",
-  debtPayment: "Debt payment",
+  debtPayment: "Payment",
+  adjustment: "Existing cash",
+};
+
+const SUBMIT_LABELS: Record<WalletTransactionType, string> = {
+  income: "Add income",
+  expense: "Add expense",
+  debtPayment: "Add debt payment",
+  adjustment: "Add cash",
 };
 
 function todayInputValue(): string {
@@ -59,13 +67,13 @@ export function TransactionForm({ initialType, initialDebtId, onDone }: Transact
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <div className="flex rounded-full border border-border bg-surface p-1">
+      <div className="grid grid-cols-2 gap-1.5 rounded-2xl border border-border bg-surface p-1.5">
         {(Object.keys(TYPE_LABELS) as WalletTransactionType[]).map((t) => (
           <button
             key={t}
             type="button"
             onClick={() => setType(t)}
-            className={`flex-1 rounded-full px-2 py-1.5 text-xs font-medium transition-colors ${
+            className={`rounded-xl px-2 py-1.5 text-xs font-medium transition-colors ${
               type === t ? "bg-primary text-primary-foreground" : "text-muted-foreground"
             }`}
           >
@@ -87,6 +95,12 @@ export function TransactionForm({ initialType, initialDebtId, onDone }: Transact
         )
       ) : null}
 
+      {type === "adjustment" && (
+        <p className="text-xs text-muted-foreground">
+          For cash you already had — not new income — so it won&apos;t skew your average monthly income.
+        </p>
+      )}
+
       <Field
         label="Amount"
         fieldPrefix="$"
@@ -103,11 +117,17 @@ export function TransactionForm({ initialType, initialDebtId, onDone }: Transact
       <Field label="Date" type="date" value={dateValue} onChange={(e) => setDateValue(e.target.value)} required />
 
       {type !== "debtPayment" && (
-        <Field label="Note" hint="Optional" placeholder="e.g. Invoice #204" value={note} onChange={(e) => setNote(e.target.value)} />
+        <Field
+          label="Note"
+          hint="Optional"
+          placeholder={type === "adjustment" ? "e.g. Checking account balance" : "e.g. Invoice #204"}
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+        />
       )}
 
       <Button type="submit" className="mt-1 w-full" disabled={type === "debtPayment" && activeDebts.length === 0}>
-        Add {TYPE_LABELS[type].toLowerCase()}
+        {SUBMIT_LABELS[type]}
       </Button>
     </form>
   );

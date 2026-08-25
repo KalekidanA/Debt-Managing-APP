@@ -33,6 +33,11 @@ describe("walletBalance", () => {
     expect(walletBalance(txs)).toBe(500);
   });
 
+  it("adds adjustment (existing cash) entries just like income", () => {
+    const txs = [tx({ id: "1", type: "adjustment", amount: 750 })];
+    expect(walletBalance(txs)).toBe(750);
+  });
+
   it("is zero with no transactions", () => {
     expect(walletBalance([])).toBe(0);
   });
@@ -51,6 +56,14 @@ describe("averageMonthlyAmount", () => {
 
   it("returns 0 when there are no transactions of that type", () => {
     expect(averageMonthlyAmount([tx({ id: "1", type: "expense", amount: 50 })], "income")).toBe(0);
+  });
+
+  it("does not count adjustment (existing cash) entries toward the income average", () => {
+    const txs = [
+      tx({ id: "1", type: "adjustment", amount: 5000, date: new Date(2026, 0, 1) }),
+      tx({ id: "2", type: "income", amount: 1000, date: new Date(2026, 0, 5) }),
+    ];
+    expect(averageMonthlyAmount(txs, "income")).toBe(1000);
   });
 });
 

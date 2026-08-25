@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { generateSalt, hashPin, verifyPin } from "@/lib/engine/appLock";
 import { detectNewlyPaidOffDebts, detectNewMilestones, type CelebrationEvent } from "@/lib/engine/celebrations";
 import type { Debt } from "@/lib/engine/debt";
 import { DEFAULT_FINANCIAL_PROFILE, type FinancialProfile } from "@/lib/engine/financialProfile";
@@ -8,12 +9,24 @@ import { DEFAULT_PAYOFF_STRATEGY, type PayoffStrategy } from "@/lib/engine/payof
 import type { WalletTransaction } from "@/lib/engine/wallet";
 import { loadAppState, saveAppState } from "@/lib/storage/db";
 
+/** A local PIN lock gating the UI on this device. Nothing here ever
+ * leaves the device and there's no way to recover a forgotten PIN short
+ * of resetting all data — this protects against someone else picking up
+ * an unlocked phone, not against anyone with access to the device's
+ * storage. */
+export interface AppLockState {
+  enabled: boolean;
+  pinHash?: string;
+  salt?: string;
+}
+
 export interface AppState {
   profile: FinancialProfile;
   debts: Debt[];
   strategy: PayoffStrategy;
   extraMonthlyPayment: number;
   hasCompletedOnboarding: boolean;
+  appLock: AppLockState;
   /** The highest total (non-mortgage) debt ever recorded, used as the
    * denominator for "% of debt paid off so far." Auto-expands if a
    * forgotten debt is added later; never shrinks as balances are paid
@@ -40,6 +53,7 @@ const DEFAULT_STATE: AppState = {
   strategy: DEFAULT_PAYOFF_STRATEGY,
   extraMonthlyPayment: 0,
   hasCompletedOnboarding: false,
+  appLock: { enabled: false },
   debtBaseline: 0,
   celebrations: [],
   notificationsEnabled: false,
@@ -116,6 +130,13 @@ interface AppStateContextValue {
    * runs the same celebration detection as editing it directly) and
    * records the cash leaving the wallet, in one atomic update. */
   logDebtPayment: (debtId: string, amount: number, date: Date, note?: string) => void;
+  /** Turns the app lock on (or changes the PIN, if already on) by hashing
+   * and storing a fresh salted hash of the given PIN. */
+  enableAppLock: (pin: string) => void;
+  disableAppLock: () => void;
+  /** Checks a PIN against the stored hash. Returns false (rather than
+   * throwing) if the lock isn't actually enabled. */
+  verifyAppLockPin: (pin: string) => boolean;
   resetAll: () => void;
 }
 
@@ -220,6 +241,25 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const enableAppLock = useCallback((pin: string) => {
+    const salt = generateSalt();
+    const pinHash = hashPin(pin, salt);
+    setState((prev) => ({ ...prev, appLock: { enabled: true, pinHash, salt } }));
+  }, []);
+
+  const disableAppLock = useCallback(() => {
+    setState((prev) => ({ ...prev, appLock: { enabled: false } }));
+  }, []);
+
+  const verifyAppLockPin = useCallback(
+    (pin: string) => {
+      const { enabled, pinHash, salt } = state.appLock;
+      if (!enabled || !pinHash || !salt) return false;
+      return verifyPin(pin, salt, pinHash);
+    },
+    [state.appLock]
+  );
+
   const resetAll = useCallback(() => {
     setState(DEFAULT_STATE);
   }, []);
@@ -241,6 +281,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       addWalletTransaction,
       removeWalletTransaction,
       logDebtPayment,
+      enableAppLock,
+      disableAppLock,
+      verifyAppLockPin,
       resetAll,
     }),
     [
@@ -259,6 +302,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       addWalletTransaction,
       removeWalletTransaction,
       logDebtPayment,
+      enableAppLock,
+      disableAppLock,
+      verifyAppLockPin,
       resetAll,
     ]
   );

@@ -37,6 +37,12 @@ export default function PrivacyPage() {
             party. If you use the installed app on iOS or Android, the same rule applies: your data lives on that
             device, inside that app&apos;s private storage.
           </p>
+          <p className="mt-2 text-muted-foreground">
+            If you turn on the optional App Lock in Settings, your PIN is never stored as plain text — only a
+            one-way hash of it is saved on the device, the same as everything else, so it never leaves either. It
+            unlocks this local data; it isn&apos;t an account, and it can&apos;t be recovered or reset by us if
+            you forget it.
+          </p>
         </Card>
 
         <Card>

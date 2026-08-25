@@ -37,7 +37,7 @@ export default function WalletPage() {
       <div className="flex flex-col gap-4">
         <StatementCard statement={financialStatement} />
 
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <Button variant="secondary" onClick={() => setAddingType("income")}>
             + Income
           </Button>
@@ -46,6 +46,9 @@ export default function WalletPage() {
           </Button>
           <Button variant="secondary" onClick={() => setAddingType("debtPayment")}>
             + Payment
+          </Button>
+          <Button variant="secondary" onClick={() => setAddingType("adjustment")}>
+            + Cash
           </Button>
         </div>
 

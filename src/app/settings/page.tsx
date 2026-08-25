@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Field } from "@/components/ui/Field";
 import { NotificationsCard } from "@/components/settings/NotificationsCard";
+import { AppLockCard } from "@/components/settings/AppLockCard";
 import { useAppState } from "@/lib/state/AppStateContext";
 import type { FinancialProfile } from "@/lib/engine/financialProfile";
 
@@ -94,6 +95,8 @@ function SettingsContent() {
         </Card>
 
         <NotificationsCard />
+
+        <AppLockCard />
 
         <Card>
           <p className="text-sm font-semibold text-foreground">Income & expenses</p>

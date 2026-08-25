@@ -18,6 +18,15 @@ function TypeIcon({ type }: { type: WalletTransaction["type"] }) {
       </svg>
     );
   }
+  if (type === "adjustment") {
+    return (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="5" width="18" height="14" rx="2.2" />
+        <path d="M16 12h.01" />
+        <path d="M3 9h18" />
+      </svg>
+    );
+  }
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="6" width="18" height="13" rx="2.2" />
@@ -30,7 +39,22 @@ const TYPE_TONE: Record<WalletTransaction["type"], string> = {
   income: "bg-primary-soft text-primary",
   expense: "bg-critical-soft text-critical",
   debtPayment: "bg-warning-soft text-warning",
+  adjustment: "bg-primary-soft text-primary",
 };
+
+/** Types that add to the wallet balance, shown with a "+" and in the
+ * primary/green tone — matches walletBalance()'s own sign convention. */
+function isPositive(type: WalletTransaction["type"]): boolean {
+  return type === "income" || type === "adjustment";
+}
+
+function titleFor(t: WalletTransaction): string {
+  if (t.type === "debtPayment") return `Payment to ${t.debtName}`;
+  if (t.note) return t.note;
+  if (t.type === "income") return "Income";
+  if (t.type === "adjustment") return "Existing cash";
+  return "Expense";
+}
 
 interface TransactionHistoryProps {
   transactions: WalletTransaction[];
@@ -55,13 +79,11 @@ export function TransactionHistory({ transactions, onDelete }: TransactionHistor
                 <TypeIcon type={t.type} />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-foreground">
-                  {t.type === "debtPayment" ? `Payment to ${t.debtName}` : t.note || (t.type === "income" ? "Income" : "Expense")}
-                </p>
+                <p className="truncate text-sm font-medium text-foreground">{titleFor(t)}</p>
                 <p className="text-xs text-muted-foreground">{format(t.date, "MMM d, yyyy")}</p>
               </div>
-              <p className={`shrink-0 text-sm font-semibold tabular-nums ${t.type === "income" ? "text-primary" : "text-foreground"}`}>
-                {t.type === "income" ? "+" : "-"}
+              <p className={`shrink-0 text-sm font-semibold tabular-nums ${isPositive(t.type) ? "text-primary" : "text-foreground"}`}>
+                {isPositive(t.type) ? "+" : "-"}
                 {formatUSD(t.amount)}
               </p>
               {t.type !== "debtPayment" && (
