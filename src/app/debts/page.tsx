@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/Card";
 import { Field } from "@/components/ui/Field";
 import { Sheet } from "@/components/ui/Sheet";
 import type { Debt } from "@/lib/engine/debt";
+import { currentMonthPaymentPlan } from "@/lib/engine/payoffCalculator";
 import { formatUSD } from "@/lib/engine/utils";
 import { totalPaidTowardDebt } from "@/lib/engine/wallet";
 import { TransactionForm } from "@/components/wallet/TransactionForm";
@@ -28,6 +29,9 @@ export default function DebtsPage() {
 
   const mortgageDebts = state.debts.filter((d) => d.type === "mortgage");
   const paidOffDebts = state.debts.filter((d) => d.type !== "mortgage" && d.balance <= 0);
+
+  const paymentPlan = currentMonthPaymentPlan(state.debts, state.strategy, state.extraMonthlyPayment);
+  const recommendationById = new Map(paymentPlan.map((r) => [r.debtId, r]));
 
   function paidTotalFor(debtId: string) {
     return totalPaidTowardDebt(state.walletTransactions, debtId);
@@ -90,6 +94,7 @@ export default function DebtsPage() {
                 isFocus={i === 0}
                 referenceDate={referenceDate}
                 paidTotal={paidTotalFor(debt.id)}
+                recommendation={recommendationById.get(debt.id)}
                 onClick={() => setEditing(debt)}
                 onLogPayment={() => setLoggingPaymentFor(debt.id)}
               />
@@ -149,6 +154,7 @@ export default function DebtsPage() {
           <TransactionForm
             initialType="debtPayment"
             initialDebtId={loggingPaymentFor}
+            initialAmount={recommendationById.get(loggingPaymentFor)?.recommendedPayment}
             onDone={() => setLoggingPaymentFor(null)}
           />
         )}

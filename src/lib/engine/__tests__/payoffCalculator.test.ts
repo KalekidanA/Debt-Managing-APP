@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { Debt } from "../debt";
 import {
+  currentMonthPaymentPlan,
   DoesNotConvergeError,
   impactOfExtraPayment,
   interestSavedVersusMinimumOnly,
   simulate,
 } from "../payoffCalculator";
+import { round2 } from "../utils";
 
 function makeDebt(overrides: Partial<Debt> & { id: string }): Debt {
   return {
@@ -63,6 +65,50 @@ describe("interestSavedVersusMinimumOnly", () => {
     expect(saved).toBeDefined();
     expect(saved!.interestSaved).toBeGreaterThan(0);
     expect(saved!.monthsSaved).toBeGreaterThan(0);
+  });
+});
+
+describe("currentMonthPaymentPlan", () => {
+  it("recommends just the minimum for debts with no extra allocated to them", () => {
+    const small = makeDebt({ id: "small", balance: 300, apr: 0.1, minimumPayment: 30 });
+    const big = makeDebt({ id: "big", balance: 2000, apr: 0.2, minimumPayment: 60 });
+    const plan = currentMonthPaymentPlan([small, big], "snowball", 100);
+    const bigLine = plan.find((l) => l.debtId === "big")!;
+    expect(bigLine.extraApplied).toBe(0);
+    expect(bigLine.recommendedPayment).toBe(60);
+  });
+
+  it("cascades the extra payment to the snowball-first (smallest balance) debt", () => {
+    const small = makeDebt({ id: "small", balance: 300, apr: 0.1, minimumPayment: 30 });
+    const big = makeDebt({ id: "big", balance: 2000, apr: 0.2, minimumPayment: 60 });
+    const plan = currentMonthPaymentPlan([small, big], "snowball", 100);
+    const smallLine = plan.find((l) => l.debtId === "small")!;
+    expect(smallLine.extraApplied).toBe(100);
+    expect(smallLine.recommendedPayment).toBe(130);
+  });
+
+  it("cascades to the highest-APR debt under avalanche instead", () => {
+    const low = makeDebt({ id: "low-apr", balance: 500, apr: 0.06, minimumPayment: 40 });
+    const high = makeDebt({ id: "high-apr", balance: 1500, apr: 0.28, minimumPayment: 45 });
+    const plan = currentMonthPaymentPlan([low, high], "avalanche", 100);
+    expect(plan.find((l) => l.debtId === "high-apr")!.extraApplied).toBe(100);
+    expect(plan.find((l) => l.debtId === "low-apr")!.extraApplied).toBe(0);
+  });
+
+  it("estimates monthly interest at the monthly rate (apr/12) on the current balance", () => {
+    const debt = makeDebt({ id: "card", balance: 1200, apr: 0.12, minimumPayment: 50 });
+    const plan = currentMonthPaymentPlan([debt], "snowball", 0);
+    expect(plan[0].estimatedMonthlyInterest).toBe(12); // 1200 * (0.12/12)
+  });
+
+  it("never recommends paying more than the remaining balance plus interest", () => {
+    const small = makeDebt({ id: "small", balance: 50, apr: 0.1, minimumPayment: 25 });
+    const plan = currentMonthPaymentPlan([small], "snowball", 1000);
+    expect(plan[0].recommendedPayment).toBeLessThanOrEqual(round2(50 + 50 * (0.1 / 12)));
+  });
+
+  it("returns an empty plan when there are no active debts", () => {
+    expect(currentMonthPaymentPlan([], "snowball", 100)).toEqual([]);
   });
 });
 

@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { averageMonthlyAmount, buildFinancialStatement, totalPaidTowardDebt, walletBalance, type WalletTransaction } from "../wallet";
+import {
+  averageMonthlyAmount,
+  buildFinancialStatement,
+  estimatedInterestSinceLastPayment,
+  lastPaymentFor,
+  totalPaidTowardDebt,
+  walletBalance,
+  type WalletTransaction,
+} from "../wallet";
 import type { Debt } from "../debt";
 
 function tx(overrides: Partial<WalletTransaction> & { id: string }): WalletTransaction {
@@ -99,5 +107,40 @@ describe("totalPaidTowardDebt", () => {
     ];
     expect(totalPaidTowardDebt(txs, "a")).toBe(125);
     expect(totalPaidTowardDebt(txs, "c")).toBe(0);
+  });
+});
+
+describe("lastPaymentFor", () => {
+  it("returns the most recent debtPayment transaction for the debt", () => {
+    const txs = [
+      tx({ id: "1", type: "debtPayment", amount: 50, debtId: "a", date: new Date(2026, 0, 1) }),
+      tx({ id: "2", type: "debtPayment", amount: 60, debtId: "a", date: new Date(2026, 1, 1) }),
+      tx({ id: "3", type: "debtPayment", amount: 999, debtId: "b", date: new Date(2026, 2, 1) }),
+    ];
+    expect(lastPaymentFor(txs, "a")?.id).toBe("2");
+  });
+
+  it("returns undefined when the debt has no logged payments", () => {
+    expect(lastPaymentFor([], "a")).toBeUndefined();
+  });
+});
+
+describe("estimatedInterestSinceLastPayment", () => {
+  it("is 0 for a debt with no prior payment — there's no start date to measure from", () => {
+    const debt = makeDebt({ id: "a", balance: 1000, apr: 0.24 });
+    expect(estimatedInterestSinceLastPayment(debt, [], new Date(2026, 0, 31))).toBe(0);
+  });
+
+  it("accrues at the daily rate (apr/365) over real elapsed days since the last payment", () => {
+    const debt = makeDebt({ id: "a", balance: 1000, apr: 0.365 }); // -> exactly 0.1%/day
+    const txs = [tx({ id: "1", type: "debtPayment", amount: 50, debtId: "a", date: new Date(2026, 0, 1) })];
+    const interest = estimatedInterestSinceLastPayment(debt, txs, new Date(2026, 0, 11)); // 10 days later
+    expect(interest).toBe(10); // 1000 * 0.001 * 10
+  });
+
+  it("ignores payments logged toward other debts", () => {
+    const debt = makeDebt({ id: "a", balance: 1000, apr: 0.365 });
+    const txs = [tx({ id: "1", type: "debtPayment", amount: 999, debtId: "other", date: new Date(2026, 0, 1) })];
+    expect(estimatedInterestSinceLastPayment(debt, txs, new Date(2026, 0, 11))).toBe(0);
   });
 });

@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { differenceInCalendarDays, format } from "date-fns";
 import type { Debt } from "./debt";
 import { round2 } from "./utils";
 
@@ -29,6 +29,10 @@ export interface WalletTransaction {
    * ledger instead of keeping its own separate paid/unpaid state. */
   billId?: string;
   billName?: string;
+  /** Set only when type === "debtPayment": how much of `amount` covered
+   * interest accrued since the previous payment on this debt, rather than
+   * reducing principal. See `estimatedInterestSinceLastPayment`. */
+  interestPortion?: number;
 }
 
 /** Current cash on hand: income and adjustments (existing cash) add,
@@ -97,4 +101,30 @@ export function totalPaidTowardDebt(transactions: WalletTransaction[], debtId: s
       .filter((t) => t.type === "debtPayment" && t.debtId === debtId)
       .reduce((sum, t) => sum + t.amount, 0)
   );
+}
+
+/** The most recent debtPayment transaction logged against a debt, or
+ * undefined if none has ever been logged. */
+export function lastPaymentFor(transactions: WalletTransaction[], debtId: string): WalletTransaction | undefined {
+  return transactions
+    .filter((t) => t.type === "debtPayment" && t.debtId === debtId)
+    .sort((a, b) => b.date.getTime() - a.date.getTime())[0];
+}
+
+/** Interest a debt has actually accrued (at its daily rate, apr/365) over
+ * the real calendar days since its last logged payment — used so logging a
+ * payment isn't just a flat subtraction from the balance: the accrued
+ * interest is added back first, and only what's left of the payment
+ * reduces principal. Returns 0 for a debt's very first payment, since
+ * there's no prior payment date to measure from — Zero can't know how
+ * long the entered balance had already been accruing before that. */
+export function estimatedInterestSinceLastPayment(
+  debt: Pick<Debt, "id" | "apr" | "balance">,
+  transactions: WalletTransaction[],
+  referenceDate: Date
+): number {
+  const last = lastPaymentFor(transactions, debt.id);
+  if (!last) return 0;
+  const days = Math.max(0, differenceInCalendarDays(referenceDate, last.date));
+  return round2(debt.balance * (debt.apr / 365) * days);
 }

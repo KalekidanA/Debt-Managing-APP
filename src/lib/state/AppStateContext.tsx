@@ -7,7 +7,8 @@ import { detectNewlyPaidOffDebts, detectNewMilestones, type CelebrationEvent } f
 import type { Debt } from "@/lib/engine/debt";
 import { DEFAULT_FINANCIAL_PROFILE, type FinancialProfile } from "@/lib/engine/financialProfile";
 import { DEFAULT_PAYOFF_STRATEGY, type PayoffStrategy } from "@/lib/engine/payoffStrategy";
-import type { WalletTransaction } from "@/lib/engine/wallet";
+import { round2 } from "@/lib/engine/utils";
+import { estimatedInterestSinceLastPayment, type WalletTransaction } from "@/lib/engine/wallet";
 import { loadAppState, saveAppState } from "@/lib/storage/db";
 
 /** A local PIN lock gating the UI on this device. Nothing here ever
@@ -132,9 +133,12 @@ interface AppStateContextValue {
   markRemindersShown: (ids: string[]) => void;
   addWalletTransaction: (transaction: WalletTransaction) => void;
   removeWalletTransaction: (id: string) => void;
-  /** Logs a real payment toward a debt: reduces that debt's balance (and
-   * runs the same celebration detection as editing it directly) and
-   * records the cash leaving the wallet, in one atomic update. */
+  /** Logs a real payment toward a debt: accrues interest owed since the
+   * last payment (at the debt's APR) onto the balance first, applies the
+   * payment against that — so only what's left after interest reduces
+   * principal — runs the same celebration detection as editing the debt
+   * directly, and records the cash leaving the wallet, in one atomic
+   * update. */
   logDebtPayment: (debtId: string, amount: number, date: Date, note?: string) => void;
   addBill: (bill: Bill) => void;
   updateBill: (id: string, patch: Partial<Bill>) => void;
@@ -236,7 +240,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setState((prev) => {
       const debt = prev.debts.find((d) => d.id === debtId);
       if (!debt || amount <= 0) return prev;
-      const newBalance = Math.max(debt.balance - amount, 0);
+      const interestAccrued = estimatedInterestSinceLastPayment(debt, prev.walletTransactions, date);
+      const interestPortion = round2(Math.min(interestAccrued, amount));
+      const newBalance = Math.max(round2(debt.balance + interestAccrued - amount), 0);
       const withDebtChange = applyDebtsChange(
         prev,
         prev.debts.map((d) => (d.id === debtId ? { ...d, balance: newBalance } : d))
@@ -249,6 +255,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         note,
         debtId,
         debtName: debt.name,
+        interestPortion,
       };
       return { ...withDebtChange, walletTransactions: [...withDebtChange.walletTransactions, transaction] };
     });

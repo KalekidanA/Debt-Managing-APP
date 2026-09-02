@@ -3,6 +3,7 @@
 import { Card } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { DEBT_TYPE_META, daysUntilNextDueDate, type Debt } from "@/lib/engine/debt";
+import type { DebtPaymentRecommendation } from "@/lib/engine/payoffCalculator";
 import { formatUSD } from "@/lib/engine/utils";
 
 interface DebtRowProps {
@@ -10,11 +11,15 @@ interface DebtRowProps {
   isFocus: boolean;
   referenceDate: Date;
   paidTotal: number;
+  /** This debt's share of the minimum + extra payment for the current
+   * month, from currentMonthPaymentPlan — undefined for debts the payoff
+   * plan doesn't cover (mortgage, already paid off). */
+  recommendation?: DebtPaymentRecommendation;
   onClick: () => void;
   onLogPayment: () => void;
 }
 
-export function DebtRow({ debt, isFocus, referenceDate, paidTotal, onClick, onLogPayment }: DebtRowProps) {
+export function DebtRow({ debt, isFocus, referenceDate, paidTotal, recommendation, onClick, onLogPayment }: DebtRowProps) {
   const meta = DEBT_TYPE_META[debt.type];
   const daysLeft = daysUntilNextDueDate(debt, referenceDate);
   const progress = debt.originalBalance && debt.originalBalance > 0 ? 1 - debt.balance / debt.originalBalance : undefined;
@@ -59,6 +64,21 @@ export function DebtRow({ debt, isFocus, referenceDate, paidTotal, onClick, onLo
         </div>
       </div>
       {progress !== undefined && <ProgressBar value={progress} className="mt-3" />}
+      {recommendation && (
+        <div className="mt-3 rounded-xl bg-primary-soft/60 px-3 py-2">
+          <div className="flex items-baseline justify-between gap-2">
+            <p className="text-xs font-medium text-primary">Pay this month</p>
+            <p className="text-sm font-semibold tabular-nums text-primary">
+              {formatUSD(recommendation.recommendedPayment)}
+            </p>
+          </div>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">
+            {formatUSD(recommendation.minimumDue)} minimum
+            {recommendation.extraApplied > 0 ? ` + ${formatUSD(recommendation.extraApplied)} extra` : ""} · ≈
+            {formatUSD(recommendation.estimatedMonthlyInterest)} interest this month
+          </p>
+        </div>
+      )}
       <div className="mt-3 flex items-center justify-between gap-3">
         <p className="text-xs text-muted-foreground">
           {paidTotal > 0 ? `${formatUSD(paidTotal)} logged toward this debt` : "No payments logged yet"}

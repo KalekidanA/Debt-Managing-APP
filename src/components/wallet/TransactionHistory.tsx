@@ -81,7 +81,10 @@ export function TransactionHistory({ transactions, onDelete }: TransactionHistor
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-foreground">{titleFor(t)}</p>
-                <p className="text-xs text-muted-foreground">{format(t.date, "MMM d, yyyy")}</p>
+                <p className="text-xs text-muted-foreground">
+                  {format(t.date, "MMM d, yyyy")}
+                  {t.type === "debtPayment" && t.interestPortion ? ` · ${formatUSD(t.interestPortion)} interest` : ""}
+                </p>
               </div>
               <p className={`shrink-0 text-sm font-semibold tabular-nums ${isPositive(t.type) ? "text-primary" : "text-foreground"}`}>
                 {isPositive(t.type) ? "+" : "-"}

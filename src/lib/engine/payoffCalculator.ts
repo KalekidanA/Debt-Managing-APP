@@ -218,6 +218,68 @@ export function interestSavedVersusMinimumOnly(
   }
 }
 
+export interface DebtPaymentRecommendation {
+  debtId: string;
+  /** This debt's share of `estimatedMonthlyInterest`, at its monthly rate
+   * (apr/12) — the same convention `simulate()` uses for every other
+   * projection in the app, so this figure stays consistent with the
+   * debt-free date and interest-saved numbers shown elsewhere. */
+  estimatedMonthlyInterest: number;
+  minimumDue: number;
+  /** This debt's share of `extraMonthlyPayment` this month, cascaded
+   * through the strategy's order exactly as `simulate()`'s first month
+   * would apply it. */
+  extraApplied: number;
+  /** What to actually pay this month: minimumDue + extraApplied. */
+  recommendedPayment: number;
+}
+
+/** How much to pay toward each active debt *this month* under the chosen
+ * strategy: everyone's minimum, plus the extra monthly payment cascaded
+ * to the current focus debt (and the next one, if the extra alone clears
+ * it) — the same cascading rule `simulate()` uses for its projections,
+ * computed once against today's live balances instead of run forward
+ * across the whole payoff. */
+export function currentMonthPaymentPlan(
+  debts: Debt[],
+  strategy: PayoffStrategy,
+  extraMonthlyPayment: number
+): DebtPaymentRecommendation[] {
+  const activeDebts = debts.filter((d) => countsTowardSnowball(d.type) && d.balance > 0);
+  const orderedIds = orderDebts(activeDebts, strategy).map((d) => d.id);
+  const byId = new Map(activeDebts.map((d) => [d.id, d]));
+
+  const interestByDebt = new Map<string, number>();
+  const minimums = new Map<string, number>();
+  for (const id of orderedIds) {
+    const debt = byId.get(id)!;
+    const interest = round2(debt.balance * (debt.apr / 12));
+    interestByDebt.set(id, interest);
+    minimums.set(id, round2(Math.min(debt.minimumPayment, debt.balance + interest)));
+  }
+
+  const extraByDebt = new Map<string, number>(orderedIds.map((id) => [id, 0]));
+  let pool = extraMonthlyPayment;
+  for (const id of orderedIds) {
+    if (pool <= 0) break;
+    const debt = byId.get(id)!;
+    const balanceAfterMinimum = round2(Math.max(debt.balance + interestByDebt.get(id)! - minimums.get(id)!, 0));
+    const applied = Math.min(pool, balanceAfterMinimum);
+    if (applied > 0) {
+      extraByDebt.set(id, applied);
+      pool = round2(pool - applied);
+    }
+  }
+
+  return orderedIds.map((id) => ({
+    debtId: id,
+    estimatedMonthlyInterest: interestByDebt.get(id)!,
+    minimumDue: minimums.get(id)!,
+    extraApplied: extraByDebt.get(id)!,
+    recommendedPayment: round2(minimums.get(id)! + extraByDebt.get(id)!),
+  }));
+}
+
 /** Reruns the simulation with a modified extra payment to answer "what if
  * I paid $X more/less per month?" — used by the Advice tab to quantify
  * the cost of a decision in months and dollars. */
